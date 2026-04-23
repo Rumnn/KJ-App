@@ -43,3 +43,15 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+.gitignore
+README.md
+pubspec.yaml
+pubspec.lock   (nếu là app)
+analysis_options.yaml
+lib/
+android/
+ios/
+
+
+.metadata
+package-lock.json
