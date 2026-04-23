@@ -1,154 +1,487 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter/material.dart';
-import '../../widgets/shimmerLoader.dart';
+import '../../providers/authProvider.dart';
+import '../../providers/dashboardProvider.dart';
 import '../../data/kanjiData.dart';
+import '../../widgets/circularProgress.dart';
+import '../../widgets/kanjiGridCard.dart';
+import '../../widgets/shimmerLoader.dart';
 import '../../appTheme.dart';
+
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
+
   @override
   ConsumerState<HomeScreen> createState() => _HomeScreenState();
 }
+
 class _HomeScreenState extends ConsumerState<HomeScreen> {
   int _navIndex = 0;
-  final List<(String, Color)> _levels = [
-    ('N5', AppTheme.jlptColors[0]),
-    ('N4', AppTheme.jlptColors[1]),
-    ('N3', AppTheme.jlptColors[2]),
-    ('N2', AppTheme.jlptColors[3]),
-    ('N1', AppTheme.jlptColors[4]),
-  ];
+
   @override
   Widget build(BuildContext context) {
+    final authState = ref.watch(authProvider);
+    final dashboardData = ref.watch(dashboardProvider);
     final kanjiAsync = ref.watch(kanjiDataProvider);
-    return DefaultTabController(
-      length: 2,
-      child: Scaffold(
-        body: SafeArea(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
-                child: Column(
+    
+    final userName = authState.value?.email.split('@').first ?? 'User';
+    final currentStreak = dashboardData.currentStreak;
+    
+    // Calculate progress based on quiz results
+    final totalQuizzes = dashboardData.quizResults.length;
+    final masteredCount = dashboardData.quizResults.where((r) => (r.score / r.total) >= 0.8).length;
+    final dailyGoal = 10;
+    final progress = (masteredCount % dailyGoal) / dailyGoal;
+
+    return Scaffold(
+      body: _navIndex == 0 
+        ? kanjiAsync.when(
+            data: (data) => _buildHomeTab(userName, currentStreak, data['N5']?.take(4).toList() ?? [], masteredCount, dailyGoal, progress),
+            loading: () => const Center(child: CircularProgressIndicator()),
+            error: (e, _) => Center(child: Text('Error loading data: $e')),
+          )
+        : _navIndex == 1 
+          ? const _LessonsTab()
+          : _navIndex == 2
+            ? const Center(child: Text('Quiz Screen Coming Soon')) // Navigation handled in BottomNavBar
+            : const Center(child: Text('Profile Screen Coming Soon')),
+      bottomNavigationBar: _buildBottomNavBar(),
+    );
+  }
+
+  Widget _buildHomeTab(String userName, int streak, List<dynamic> recommended, int mastered, int goal, double progress) {
+    return SafeArea(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header
+            Row(
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.arrow_back, color: AppTheme.primary),
+                  onPressed: () {},
+                ),
+                const SizedBox(width: 8),
+                const Text(
+                  'KanjiFlow',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w800,
+                    color: AppTheme.primary,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+                const Spacer(),
+                IconButton(
+                  icon: const Icon(Icons.account_circle, color: AppTheme.primary, size: 28),
+                  onPressed: () => context.push('/home/settings'),
+                ),
+              ],
+            ),
+            const SizedBox(height: 32),
+            
+            // Welcome & Streak
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      children: [
-                        ShaderMask(
-                          shaderCallback: (b) => AppTheme.accentGradient.createShader(b),
-                          child: const Text('KJ', style: TextStyle(fontSize: 36, fontWeight: FontWeight.w900, color: Colors.white)),
-                        ),
-                        const Spacer(),
-                        IconButton(
-                          icon: const Icon(Icons.settings_outlined, color: AppTheme.textSecondary),
-                          onPressed: () => context.push('/home/settings'),
-                        ),
-                      ],
+                    Text(
+                      'Okaeri, $userName',
+                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: AppTheme.textMuted),
                     ),
-                    const SizedBox(height: 6),
-                    const Text('漢字を学ぼう', style: TextStyle(fontSize: 13, color: AppTheme.textMuted)),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 4),
+                    const Text(
+                      'Keep it up!',
+                      style: TextStyle(fontSize: 32, fontWeight: FontWeight.w600, color: AppTheme.onBackground),
+                    ),
                   ],
                 ),
-              ),
-              const TabBar(
-                indicatorColor: AppTheme.accentLight,
-                labelColor: AppTheme.accentLight,
-                unselectedLabelColor: AppTheme.textMuted,
-                indicatorSize: TabBarIndicatorSize.tab,
-                tabs: [
-                  Tab(text: 'JLPT Kanji'),
-                  Tab(text: 'Radicals'),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: AppTheme.tertiaryFixedDim.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: AppTheme.tertiaryFixedDim.withValues(alpha: 0.3)),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.local_fire_department, color: AppTheme.tertiary, size: 20),
+                      const SizedBox(width: 4),
+                      Text(
+                        '$streak',
+                        style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w600, color: AppTheme.tertiary, height: 1),
+                      ),
+                      const SizedBox(width: 4),
+                      const Text(
+                        'DAYS',
+                        style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: AppTheme.tertiary),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 32),
+            
+            // Daily Progress
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(24),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppTheme.primary.withValues(alpha: 0.08),
+                    blurRadius: 20,
+                    offset: const Offset(0, 4),
+                  ),
                 ],
               ),
-              Expanded(
-                child: TabBarView(
-                  children: [
-                    CustomScrollView(
-                      slivers: [
-                        const SliverToBoxAdapter(child: SizedBox(height: 24)),
-                        SliverPadding(
-                          padding: const EdgeInsets.symmetric(horizontal: 20),
-                          sliver: kanjiAsync.when(
-                            loading: () => const SliverToBoxAdapter(child: ShimmerGrid()),
-                            error: (e, _) => SliverToBoxAdapter(child: Text('Error: $e', style: const TextStyle(color: AppTheme.error))),
-                            data: (data) => SliverGrid(
-                              delegate: SliverChildBuilderDelegate(
-                                (_, i) {
-                                  final (level, color) = _levels[i];
-                                  final count = data[level]?.length ?? 0;
-                                  return GestureDetector(
-                                    onTap: () => context.push('/home/kanji/$level'),
-                                    child: AnimatedContainer(
-                                      duration: const Duration(milliseconds: 200),
-                                      decoration: BoxDecoration(
-                                        gradient: LinearGradient(colors: [color.withValues(alpha: 0.18), color.withValues(alpha: 0.05)], begin: Alignment.topLeft, end: Alignment.bottomRight),
-                                        borderRadius: BorderRadius.circular(20),
-                                        border: Border.all(color: color.withValues(alpha: 0.3), width: 1.5),
-                                      ),
-                                      child: Column(
-                                        mainAxisAlignment: MainAxisAlignment.center,
-                                        children: [
-                                          Text(level, style: TextStyle(fontSize: 26, fontWeight: FontWeight.w800, color: color, letterSpacing: 1)),
-                                          const SizedBox(height: 6),
-                                          Text('$count Kanji', style: TextStyle(fontSize: 11, color: color.withValues(alpha: 0.8))),
-                                          const SizedBox(height: 8),
-                                          Row(
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              Icon(Icons.play_circle_filled_rounded, size: 14, color: color.withValues(alpha: 0.7)),
-                                              const SizedBox(width: 4),
-                                              Text('Study', style: TextStyle(fontSize: 11, color: color.withValues(alpha: 0.7), fontWeight: FontWeight.w500)),
-                                            ],
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  );
-                                },
-                                childCount: _levels.length,
-                              ),
-                              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 2, mainAxisSpacing: 12, crossAxisSpacing: 12, childAspectRatio: 1.3),
-                            ),
-                          ),
-                        ),
-                        const SliverToBoxAdapter(child: SizedBox(height: 48)),
-                      ],
+              child: Column(
+                children: [
+                  const Text(
+                    'DAILY PROGRESS',
+                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppTheme.textMuted, letterSpacing: 1),
+                  ),
+                  const SizedBox(height: 16),
+                  CircularProgress(progress: progress > 0 ? progress : 0.01),
+                  const SizedBox(height: 16),
+                  Text(
+                    '$mastered/$goal Kanji Mastered',
+                    style: const TextStyle(fontSize: 16, color: AppTheme.textSecondary),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            
+            // Continue Learning Card
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(28),
+              decoration: BoxDecoration(
+                color: AppTheme.primaryContainer,
+                borderRadius: BorderRadius.circular(24),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppTheme.primary.withValues(alpha: 0.15),
+                    blurRadius: 24,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(100),
+                      border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
                     ),
-                    const _RadicalsTab(),
+                    child: const Text(
+                      'N5 LEVEL • WEEK 2',
+                      style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: Colors.white),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Essential Verbs',
+                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.w600, color: Colors.white),
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Focusing on movement and direction radicals today.',
+                    style: TextStyle(fontSize: 16, color: Colors.white70),
+                  ),
+                  const SizedBox(height: 32),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      ElevatedButton(
+                        onPressed: () => context.push('/home/kanji/N5'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.white,
+                          foregroundColor: AppTheme.primary,
+                          minimumSize: const Size(120, 48),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        ),
+                        child: const Text('Continue'),
+                      ),
+                      const Row(
+                        children: [
+                          _SmallKanjiCircle(char: '行'),
+                          _SmallKanjiCircle(char: '来'),
+                          _SmallKanjiCircle(char: '出'),
+                        ],
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 40),
+            
+            // Recommended for you
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Recommended for you',
+                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.w600, color: AppTheme.onBackground),
+                ),
+                TextButton(
+                  onPressed: () => setState(() => _navIndex = 1),
+                  child: const Text('View All', style: TextStyle(color: AppTheme.primary, fontWeight: FontWeight.w600)),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: recommended.length,
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                mainAxisSpacing: 12,
+                crossAxisSpacing: 12,
+                childAspectRatio: 0.9,
+              ),
+              itemBuilder: (_, i) {
+                final k = recommended[i];
+                return KanjiGridCard(
+                  character: k.character,
+                  romaji: k.kunReadings.isNotEmpty ? k.kunReadings.first : k.onReadings.first,
+                  meaning: k.primaryMeaning,
+                  onTap: () => context.push('/home/kanji/N5/detail/${k.character}'),
+                );
+              },
+            ),
+            const SizedBox(height: 40),
+            
+            // Stroke Order Feature Card
+            GestureDetector(
+              onTap: () => context.push('/home/radicals'),
+              child: Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: AppTheme.surfaceContainer.withValues(alpha: 0.5),
+                  borderRadius: BorderRadius.circular(24),
+                ),
+                child: Row(
+                  children: [
+                    const Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Master Stroke Order',
+                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: AppTheme.onBackground),
+                          ),
+                          SizedBox(height: 4),
+                          Text(
+                            'Practice writing 5 new radicals with our interactive guide.',
+                            style: TextStyle(fontSize: 14, color: AppTheme.textSecondary),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Container(
+                      width: 64,
+                      height: 64,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: AppTheme.outlineVariant, style: BorderStyle.none),
+                      ),
+                      child: const Icon(Icons.edit_square, color: AppTheme.outlineVariant, size: 32),
+                    ),
                   ],
                 ),
               ),
-            ],
-          ),
+            ),
+            const SizedBox(height: 100),
+          ],
         ),
-        bottomNavigationBar: Container(
-          decoration: const BoxDecoration(border: Border(top: BorderSide(color: AppTheme.border))),
-          child: BottomNavigationBar(
-            currentIndex: _navIndex,
-            onTap: (i) async {
-              setState(() => _navIndex = i);
-              switch (i) {
-                case 1: await context.push('/home/dashboard'); break;
-                case 2: await context.push('/home/quiz'); break;
-                case 3: await context.push('/home/flashcard'); break;
-                default: break;
-              }
-              if (mounted && i != 0) setState(() => _navIndex = 0);
-            },
-            items: const [
-              BottomNavigationBarItem(icon: Icon(Icons.home_rounded), label: 'Home'),
-              BottomNavigationBarItem(icon: Icon(Icons.bar_chart_rounded), label: 'Dashboard'),
-              BottomNavigationBarItem(icon: Icon(Icons.quiz_rounded), label: 'Quiz'),
-              BottomNavigationBarItem(icon: Icon(Icons.style_rounded), label: 'Flashcard'),
-            ],
+      ),
+    );
+  }
+
+  Widget _buildBottomNavBar() {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        boxShadow: [
+          BoxShadow(
+            color: AppTheme.primary.withValues(alpha: 0.08),
+            blurRadius: 20,
+            offset: const Offset(0, -4),
           ),
+        ],
+      ),
+      child: BottomNavigationBar(
+        currentIndex: _navIndex,
+        onTap: (i) {
+          if (i == 2) {
+            context.push('/home/quiz');
+            return;
+          }
+          if (i == 3) {
+            context.push('/home/settings');
+            return;
+          }
+          setState(() => _navIndex = i);
+        },
+        items: [
+          const BottomNavigationBarItem(
+            icon: Icon(Icons.home_outlined),
+            activeIcon: Icon(Icons.home, color: AppTheme.primary),
+            label: 'Home',
+          ),
+          const BottomNavigationBarItem(
+            icon: Icon(Icons.menu_book_outlined),
+            activeIcon: Icon(Icons.menu_book),
+            label: 'Lessons',
+          ),
+          const BottomNavigationBarItem(
+            icon: Icon(Icons.quiz_outlined),
+            label: 'Quiz',
+          ),
+          const BottomNavigationBarItem(
+            icon: Icon(Icons.person_outline),
+            label: 'Profile',
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SmallKanjiCircle extends StatelessWidget {
+  final String char;
+  const _SmallKanjiCircle({required this.char});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 32,
+      height: 32,
+      margin: const EdgeInsets.only(left: 4),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.2),
+        shape: BoxShape.circle,
+        border: Border.all(color: Colors.white.withValues(alpha: 0.3), width: 1.5),
+      ),
+      child: Center(
+        child: Text(
+          char,
+          style: const TextStyle(fontSize: 12, color: Colors.white, fontWeight: FontWeight.bold),
         ),
       ),
     );
   }
 }
+
+class _LessonsTab extends ConsumerWidget {
+  const _LessonsTab();
+  
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final kanjiAsync = ref.watch(kanjiDataProvider);
+    final List<(String, Color)> levels = [
+      ('N5', AppTheme.jlptColors[0]),
+      ('N4', AppTheme.jlptColors[1]),
+      ('N3', AppTheme.jlptColors[2]),
+      ('N2', AppTheme.jlptColors[3]),
+      ('N1', AppTheme.jlptColors[4]),
+    ];
+
+    return DefaultTabController(
+      length: 2,
+      child: Column(
+        children: [
+          const SafeArea(child: SizedBox(height: 16)),
+          const TabBar(
+            indicatorColor: AppTheme.primary,
+            labelColor: AppTheme.primary,
+            unselectedLabelColor: AppTheme.textMuted,
+            indicatorSize: TabBarIndicatorSize.tab,
+            tabs: [
+              Tab(text: 'JLPT Kanji'),
+              Tab(text: 'Radicals'),
+            ],
+          ),
+          Expanded(
+            child: TabBarView(
+              children: [
+                kanjiAsync.when(
+                  data: (data) => ListView.builder(
+                    padding: const EdgeInsets.all(24),
+                    itemCount: levels.length,
+                    itemBuilder: (_, i) {
+                      final (level, color) = levels[i];
+                      final count = data[level]?.length ?? 0;
+                      return GestureDetector(
+                        onTap: () => context.push('/home/kanji/$level'),
+                        child: Container(
+                          margin: const EdgeInsets.only(bottom: 16),
+                          padding: const EdgeInsets.all(24),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(24),
+                            border: Border.all(color: color.withValues(alpha: 0.2)),
+                            boxShadow: [
+                              BoxShadow(color: color.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, 4)),
+                            ],
+                          ),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 56,
+                                height: 56,
+                                decoration: BoxDecoration(color: color.withValues(alpha: 0.1), shape: BoxShape.circle),
+                                child: Center(child: Text(level, style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: color))),
+                              ),
+                              const SizedBox(width: 20),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text('$level Level Study', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                                    Text('$count Essential Kanji', style: const TextStyle(fontSize: 14, color: AppTheme.textMuted)),
+                                  ],
+                                ),
+                              ),
+                              Icon(Icons.chevron_right_rounded, color: color),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                  loading: () => const Center(child: CircularProgressIndicator()),
+                  error: (e, _) => Center(child: Text('Error: $e')),
+                ),
+                const _RadicalsTab(),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _RadicalsTab extends ConsumerWidget {
   const _RadicalsTab();
   @override
@@ -175,16 +508,15 @@ class _RadicalsTab extends ConsumerWidget {
             SizedBox(
               width: double.infinity,
               child: Wrap(
-                alignment: WrapAlignment.center,
                 spacing: 8,
                 runSpacing: 8,
                 children: group.map((r) => Container(
                     width: 72,
                     padding: const EdgeInsets.symmetric(vertical: 10),
-                    decoration: BoxDecoration(color: AppTheme.card, borderRadius: BorderRadius.circular(12), border: Border.all(color: AppTheme.border)),
+                    decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12), border: Border.all(color: AppTheme.outlineVariant.withValues(alpha: 0.3))),
                     child: Column(
                       children: [
-                        Text(r.character, style: const TextStyle(fontSize: 26, color: AppTheme.textPrimary)),
+                        Text(r.character, style: const TextStyle(fontSize: 26, color: AppTheme.primary)),
                         const SizedBox(height: 2),
                         Text(r.meaning, style: const TextStyle(fontSize: 8, color: AppTheme.textMuted), textAlign: TextAlign.center, maxLines: 1, overflow: TextOverflow.ellipsis),
                       ],

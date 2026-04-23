@@ -6,49 +6,75 @@ import '../../providers/authProvider.dart';
 import '../../services/hiveService.dart';
 import '../../appConfig.dart';
 import '../../appTheme.dart';
+
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
+
   Future<void> _logout(BuildContext context, WidgetRef ref) async {
     await ref.read(authProvider.notifier).logout();
     if (context.mounted) context.go('/auth/login');
   }
+
   Future<void> _openDonate() async {
     final uri = Uri.parse(AppConfig.donateUrl);
     if (await canLaunchUrl(uri)) await launchUrl(uri);
   }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(authProvider).value;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Settings'),
-        leading: IconButton(onPressed: () => context.pop(), icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20)),
+        title: const Text('Profile Settings'),
+        leading: IconButton(
+          onPressed: () => context.pop(), 
+          icon: const Icon(Icons.arrow_back, color: AppTheme.primary)
+        ),
       ),
       body: ListView(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(24),
         children: [
+          // Profile Header Card
           Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(color: AppTheme.card, borderRadius: BorderRadius.circular(16), border: Border.all(color: AppTheme.border)),
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(24),
+              boxShadow: [
+                BoxShadow(
+                  color: AppTheme.primary.withValues(alpha: 0.05),
+                  blurRadius: 15,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
             child: Row(
               children: [
                 Container(
-                  width: 56,
-                  height: 56,
+                  width: 64,
+                  height: 64,
                   decoration: BoxDecoration(
-                    color: AppTheme.accent.withValues(alpha: 0.15),
+                    color: AppTheme.primary.withValues(alpha: 0.1),
                     shape: BoxShape.circle,
-                    border: Border.all(color: AppTheme.accent, width: 1.5),
                   ),
-                  child: const Center(child: Icon(Icons.person_rounded, size: 32, color: AppTheme.accent)),
+                  child: const Center(
+                    child: Icon(Icons.person, size: 32, color: AppTheme.primary)
+                  ),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(user?.email ?? 'Not Logged In', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: AppTheme.textPrimary)),
-                      Text('漢字', style: TextStyle(fontSize: 12, color: AppTheme.success.withValues(alpha: 0.8))),
+                      Text(
+                        user?.email ?? 'Not Logged In', 
+                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'JLPT Learner', 
+                        style: TextStyle(fontSize: 14, color: AppTheme.secondary.withValues(alpha: 0.8), fontWeight: FontWeight.w600)
+                      ),
                     ],
                   ),
                 ),
@@ -56,42 +82,58 @@ class SettingsScreen extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: 32),
-          const Text('App Information', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppTheme.textMuted, letterSpacing: 1.2)),
+          
+          const _SectionHeader(title: 'Account Settings'),
           const SizedBox(height: 12),
-          const _SettingsTile(icon: Icons.info_outline_rounded, title: 'Version', trailing: Text(AppConfig.appVersion, style: TextStyle(color: AppTheme.textSecondary, fontSize: 13))),
-          const Divider(height: 1, color: AppTheme.border),
-          const _SettingsTile(icon: Icons.code_rounded, title: 'Made With Flutter', subtitle: 'With FastifyJS'),
-          const SizedBox(height: 32),
-          const Text('Data & Account', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppTheme.textMuted, letterSpacing: 1.2)),
-          const SizedBox(height: 12),
-          _SettingsTile(
-            icon: Icons.delete_outline_rounded,
-            title: 'Clear Local Data',
-            subtitle: 'Resets Streak & Device Quiz History',
-            color: AppTheme.error,
-            onTap: () async {
-              await HiveService.clearAll();
-              if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Local Data Cleared')));
-            },
-          ),
-          const Divider(height: 1, color: AppTheme.border),
           _SettingsTile(
             icon: Icons.logout_rounded,
             title: 'Sign Out',
+            subtitle: 'Safely exit your account',
+            color: AppTheme.error,
             onTap: () => _logout(context, ref),
           ),
-          const SizedBox(height: 48),
+          
+          const SizedBox(height: 32),
+          const _SectionHeader(title: 'Data Management'),
+          const SizedBox(height: 12),
+          _SettingsTile(
+            icon: Icons.delete_outline_rounded,
+            title: 'Clear Local Progress',
+            subtitle: 'Resets streak and local history',
+            onTap: () async {
+              await HiveService.clearAll();
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Progress data cleared'))
+                );
+              }
+            },
+          ),
+          
+          const SizedBox(height: 32),
+          const _SectionHeader(title: 'Support & Info'),
+          const SizedBox(height: 12),
+          _SettingsTile(
+            icon: Icons.info_outline,
+            title: 'App Version',
+            subtitle: 'Currently v${AppConfig.appVersion}',
+          ),
+          _SettingsTile(
+            icon: Icons.favorite_outline,
+            title: 'Donate',
+            subtitle: 'Support the developer',
+            onTap: _openDonate,
+          ),
+          
+          const SizedBox(height: 60),
           Center(
-            child: ElevatedButton.icon(
-              onPressed: _openDonate,
-              icon: const Icon(Icons.favorite_rounded, color: AppTheme.error, size: 18),
-              label: const Text('Support The Developer'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.card,
-                foregroundColor: AppTheme.textPrimary,
-                side: const BorderSide(color: AppTheme.border),
-                elevation: 0,
-                minimumSize: const Size(200, 48),
+            child: Text(
+              'MADE WITH ♥ BY ANTIGRAVITY',
+              style: TextStyle(
+                fontSize: 11, 
+                fontWeight: FontWeight.w800, 
+                color: AppTheme.textMuted.withValues(alpha: 0.5),
+                letterSpacing: 1.5
               ),
             ),
           ),
@@ -100,25 +142,65 @@ class SettingsScreen extends ConsumerWidget {
     );
   }
 }
+
+class _SectionHeader extends StatelessWidget {
+  final String title;
+  const _SectionHeader({required this.title});
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      title.toUpperCase(),
+      style: const TextStyle(
+        fontSize: 12, 
+        fontWeight: FontWeight.w700, 
+        color: AppTheme.textMuted, 
+        letterSpacing: 1.2
+      )
+    );
+  }
+}
+
 class _SettingsTile extends StatelessWidget {
   final IconData icon;
   final String title;
   final String? subtitle;
-  final Widget? trailing;
-  final Color color;
+  final Color? color;
   final VoidCallback? onTap;
-  const _SettingsTile({required this.icon, required this.title, this.subtitle, this.trailing, this.color = AppTheme.textPrimary, this.onTap});
+
+  const _SettingsTile({
+    required this.icon,
+    required this.title,
+    this.subtitle,
+    this.color,
+    this.onTap,
+  });
+
   @override
-  Widget build(BuildContext context) => ListTile(
-    onTap: onTap,
-    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-    leading: Container(
-      padding: const EdgeInsets.all(8),
-      decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
-      child: Icon(icon, color: color, size: 20),
-    ),
-    title: Text(title, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500, color: color)),
-    subtitle: subtitle != null ? Text(subtitle!, style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary)) : null,
-    trailing: trailing ?? (onTap != null ? const Icon(Icons.chevron_right_rounded, color: AppTheme.textMuted, size: 20) : null),
-  );
+  Widget build(BuildContext context) {
+    final finalColor = color ?? AppTheme.onBackground;
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppTheme.outlineVariant.withValues(alpha: 0.2)),
+      ),
+      child: ListTile(
+        onTap: onTap,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+        leading: Icon(icon, color: finalColor, size: 24),
+        title: Text(
+          title, 
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: finalColor)
+        ),
+        subtitle: subtitle != null 
+          ? Text(subtitle!, style: const TextStyle(fontSize: 13, color: AppTheme.textMuted)) 
+          : null,
+        trailing: onTap != null 
+          ? const Icon(Icons.chevron_right, color: AppTheme.textMuted) 
+          : null,
+      ),
+    );
+  }
 }
