@@ -128,7 +128,7 @@ class SettingsScreen extends ConsumerWidget {
           const SizedBox(height: 60),
           Center(
             child: Text(
-              'MADE WITH ♥ BY ANTIGRAVITY',
+              'MADE WITH ♥ BY PKA',
               style: TextStyle(
                 fontSize: 11, 
                 fontWeight: FontWeight.w800, 
