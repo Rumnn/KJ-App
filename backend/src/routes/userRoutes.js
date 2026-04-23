@@ -13,7 +13,7 @@ router.get('/quizResults', async (req, res) => {
     res.status(200).json(results);
   } catch (error) {
     console.error('Error fetching quiz results:', error);
-    res.status(500).json({ error: 'Internal Server Error' });
+    res.status(500).json({ message: 'Internal Server Error' });
   }
 });
 
@@ -22,7 +22,7 @@ router.post('/quizResults', async (req, res) => {
     const { level, score, total, date } = req.body;
 
     if (!level || score === undefined || total === undefined || !date) {
-      return res.status(400).json({ error: 'Missing required fields' });
+      return res.status(400).json({ message: 'Missing required fields' });
     }
 
     const newResult = new QuizResult({
@@ -37,7 +37,7 @@ router.post('/quizResults', async (req, res) => {
     res.status(201).json({ message: 'Quiz Result Saved!' });
   } catch (error) {
     console.error('Error saving quiz result:', error);
-    res.status(500).json({ error: 'Internal Server Error' });
+    res.status(500).json({ message: 'Internal Server Error' });
   }
 });
 
