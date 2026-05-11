@@ -16,6 +16,18 @@ const userSchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
+  xp: {
+    type: Number,
+    default: 0,
+  },
+  points: {
+    type: Number,
+    default: 0,
+  },
+  quizCount: {
+    type: Number,
+    default: 0,
+  },
 });
 
 const User = mongoose.model('User', userSchema);

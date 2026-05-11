@@ -14,6 +14,7 @@ import 'screens/auth/signUpScreen.dart';
 import 'screens/auth/loginScreen.dart';
 import 'screens/home/homeScreen.dart';
 import 'screens/quiz/quizScreen.dart';
+import 'screens/leaderboard/leaderboardScreen.dart';
 final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     initialLocation: '/home',
@@ -52,6 +53,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(path: 'writing/:character', builder: (_, state) => WritingPracticeScreen(character: state.pathParameters['character']!)),
           GoRoute(path: 'dashboard', builder: (_, __) => const DashboardScreen()),
           GoRoute(path: 'settings', builder: (_, __) => const SettingsScreen()),
+          GoRoute(path: 'leaderboard', builder: (_, __) => const LeaderboardScreen()),
         ],
       ),
     ],

@@ -56,3 +56,6 @@ ios/
 .metadata
 package-lock.json
 stitch_kanji_flashcard_master
+node_modules/
+backend/node_modules/
+.env

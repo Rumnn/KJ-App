@@ -48,3 +48,18 @@ class ShimmerGrid extends StatelessWidget {
     itemBuilder: (_, __) => const ShimmerLoader(height: 100, radius: 24),
   );
 }
+
+class ShimmerListLoader extends StatelessWidget {
+  const ShimmerListLoader({super.key});
+
+  @override
+  Widget build(BuildContext context) => ListView.builder(
+    shrinkWrap: true,
+    padding: const EdgeInsets.all(20),
+    itemCount: 5,
+    itemBuilder: (_, __) => Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: ShimmerLoader(height: 80, radius: 20),
+    ),
+  );
+}
