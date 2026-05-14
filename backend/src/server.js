@@ -4,6 +4,7 @@ import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import authRoutes from './routes/authRoutes.js';
 import userRoutes from './routes/userRoutes.js';
+import aiRoutes from './routes/aiRoutes.js';
 
 dotenv.config();
 
@@ -18,6 +19,7 @@ app.use(express.json());
 // Routes
 app.use('/auth', authRoutes);
 app.use('/user', userRoutes);
+app.use('/ai', aiRoutes);
 
 // Health Check
 app.get('/health', (req, res) => {

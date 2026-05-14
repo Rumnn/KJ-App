@@ -61,6 +61,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       child: Text(
                           'Quiz Screen Coming Soon')) // Navigation handled in BottomNavBar
                   : const Center(child: Text('Profile Screen Coming Soon')),
+      floatingActionButton: _buildChatFab(),
       bottomNavigationBar: _buildBottomNavBar(),
     );
   }
@@ -394,6 +395,50 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ),
             ),
             const SizedBox(height: 100),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildChatFab() {
+    return GestureDetector(
+      onTap: () => context.push('/home/chat'),
+      child: Container(
+        width: 60,
+        height: 60,
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [Color(0xFF4352A5), Color(0xFF7C3AED)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(30),
+          boxShadow: [
+            BoxShadow(
+              color: AppTheme.primary.withValues(alpha: 0.4),
+              blurRadius: 16,
+              offset: const Offset(0, 6),
+            ),
+          ],
+        ),
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            const Text('先', style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold)),
+            Positioned(
+              top: 8,
+              right: 8,
+              child: Container(
+                width: 10,
+                height: 10,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF4CAF7D),
+                  shape: BoxShape.circle,
+                  border: Border.all(color: Colors.white, width: 1.5),
+                ),
+              ),
+            ),
           ],
         ),
       ),
