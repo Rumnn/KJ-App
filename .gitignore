@@ -48,7 +48,23 @@ README.md
 pubspec.yaml
 pubspec.lock   (nếu là app)
 analysis_options.yaml
-lib/
+lib/*
+!lib/data/
+lib/data/*
+!lib/data/grammarData.dart
+!lib/data/vocabJlptData.dart
+!lib/models/
+lib/models/*
+!lib/models/grammarModel.dart
+!lib/models/vocabJlptModel.dart
+!lib/screens/
+lib/screens/*
+!lib/screens/grammar/
+lib/screens/grammar/*
+!lib/screens/grammar/grammarPracticeScreen.dart
+!lib/screens/vocab/
+lib/screens/vocab/*
+!lib/screens/vocab/vocabPracticeScreen.dart
 android/
 ios/
 

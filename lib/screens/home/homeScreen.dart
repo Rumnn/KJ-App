@@ -3,7 +3,9 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter/material.dart';
 import '../../providers/authProvider.dart';
 import '../../providers/dashboardProvider.dart';
+import '../../data/grammarData.dart';
 import '../../data/kanjiData.dart';
+import '../../data/vocabJlptData.dart';
 import '../../widgets/circularProgress.dart';
 import '../../widgets/kanjiGridCard.dart';
 import '../../widgets/shimmerLoader.dart';
@@ -376,18 +378,28 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(24),
                       border: Border.all(
-                          color: AppTheme.outlineVariant.withValues(alpha: 0.2)),
+                          color:
+                              AppTheme.outlineVariant.withValues(alpha: 0.2)),
                     ),
                     child: Column(
                       children: [
                         const _LeaderboardItem(
-                            rank: 1, name: 'KanjiMaster', points: 1250, isMe: false),
+                            rank: 1,
+                            name: 'KanjiMaster',
+                            points: 1250,
+                            isMe: false),
                         const Divider(),
                         _LeaderboardItem(
-                            rank: 2, name: userName, points: points, isMe: true),
+                            rank: 2,
+                            name: userName,
+                            points: points,
+                            isMe: true),
                         const Divider(),
                         const _LeaderboardItem(
-                            rank: 3, name: 'SenseiBot', points: 800, isMe: false),
+                            rank: 3,
+                            name: 'SenseiBot',
+                            points: 800,
+                            isMe: false),
                       ],
                     ),
                   ),
@@ -425,7 +437,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         child: Stack(
           alignment: Alignment.center,
           children: [
-            const Text('先', style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold)),
+            const Text('先',
+                style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold)),
             Positioned(
               top: 8,
               right: 8,
@@ -529,6 +545,8 @@ class _LessonsTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final kanjiAsync = ref.watch(kanjiDataProvider);
+    final grammarAsync = ref.watch(grammarDataProvider);
+    final vocabAsync = ref.watch(vocabJlptDataProvider);
     final List<(String, Color)> levels = [
       ('N5', AppTheme.jlptColors[0]),
       ('N4', AppTheme.jlptColors[1]),
@@ -538,7 +556,7 @@ class _LessonsTab extends ConsumerWidget {
     ];
 
     return DefaultTabController(
-      length: 2,
+      length: 4,
       child: Column(
         children: [
           const SafeArea(child: SizedBox(height: 16)),
@@ -549,6 +567,8 @@ class _LessonsTab extends ConsumerWidget {
             indicatorSize: TabBarIndicatorSize.tab,
             tabs: [
               Tab(text: 'JLPT Kanji'),
+              Tab(text: 'Grammar'),
+              Tab(text: 'Vocabulary'),
               Tab(text: 'Radicals'),
             ],
           ),
@@ -621,11 +641,280 @@ class _LessonsTab extends ConsumerWidget {
                       const Center(child: CircularProgressIndicator()),
                   error: (e, _) => Center(child: Text('Error: $e')),
                 ),
+                grammarAsync.when(
+                  data: (data) => ListView(
+                    padding: const EdgeInsets.all(24),
+                    children: [
+                      GestureDetector(
+                        onTap: () => context.push('/home/grammar'),
+                        child: Container(
+                          margin: const EdgeInsets.only(bottom: 16),
+                          padding: const EdgeInsets.all(24),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(24),
+                            border: Border.all(
+                              color: AppTheme.primary.withValues(alpha: 0.18),
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: AppTheme.primary.withValues(alpha: 0.05),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: const Row(
+                            children: [
+                              _GrammarIcon(),
+                              SizedBox(width: 20),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Grammar Practice',
+                                      style: TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    Text(
+                                      'Quiz and flashcards for N5, N4, N3',
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        color: AppTheme.textMuted,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Icon(
+                                Icons.chevron_right_rounded,
+                                color: AppTheme.primary,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      ...[
+                        ('N5', AppTheme.jlptColors[0]),
+                        ('N4', AppTheme.jlptColors[1]),
+                        ('N3', AppTheme.jlptColors[2]),
+                      ].map((item) {
+                        final (level, color) = item;
+                        final count = data[level]?.length ?? 0;
+                        return GestureDetector(
+                          onTap: () => context.push('/home/grammar/$level'),
+                          child: Container(
+                            margin: const EdgeInsets.only(bottom: 12),
+                            padding: const EdgeInsets.all(18),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(18),
+                              border: Border.all(
+                                color: color.withValues(alpha: 0.2),
+                              ),
+                            ),
+                            child: Row(
+                              children: [
+                                Container(
+                                  width: 50,
+                                  height: 50,
+                                  decoration: BoxDecoration(
+                                    color: color.withValues(alpha: 0.1),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Center(
+                                    child: Text(
+                                      level,
+                                      style: TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
+                                        color: color,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 16),
+                                Expanded(
+                                  child: Text(
+                                    '$count Grammar Points',
+                                    style: const TextStyle(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                                Icon(Icons.chevron_right_rounded, color: color),
+                              ],
+                            ),
+                          ),
+                        );
+                      }),
+                    ],
+                  ),
+                  loading: () =>
+                      const Center(child: CircularProgressIndicator()),
+                  error: (e, _) => Center(child: Text('Error: $e')),
+                ),
+                vocabAsync.when(
+                  data: (data) => ListView(
+                    padding: const EdgeInsets.all(24),
+                    children: [
+                      GestureDetector(
+                        onTap: () => context.push('/home/vocab'),
+                        child: Container(
+                          margin: const EdgeInsets.only(bottom: 16),
+                          padding: const EdgeInsets.all(24),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(24),
+                            border: Border.all(
+                              color: AppTheme.secondary.withValues(alpha: 0.18),
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color:
+                                    AppTheme.secondary.withValues(alpha: 0.05),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: const Row(
+                            children: [
+                              _VocabularyIcon(),
+                              SizedBox(width: 20),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Vocabulary Practice',
+                                      style: TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    Text(
+                                      'Quiz, flashcards, and matching game',
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        color: AppTheme.textMuted,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Icon(
+                                Icons.chevron_right_rounded,
+                                color: AppTheme.secondary,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      ...levels.map((item) {
+                        final (level, color) = item;
+                        final count = data[level]?.length ?? 0;
+                        return GestureDetector(
+                          onTap: () => context.push('/home/vocab/$level'),
+                          child: Container(
+                            margin: const EdgeInsets.only(bottom: 12),
+                            padding: const EdgeInsets.all(18),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(18),
+                              border: Border.all(
+                                color: color.withValues(alpha: 0.2),
+                              ),
+                            ),
+                            child: Row(
+                              children: [
+                                Container(
+                                  width: 50,
+                                  height: 50,
+                                  decoration: BoxDecoration(
+                                    color: color.withValues(alpha: 0.1),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Center(
+                                    child: Text(
+                                      level,
+                                      style: TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
+                                        color: color,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 16),
+                                Expanded(
+                                  child: Text(
+                                    '$count Vocabulary Words',
+                                    style: const TextStyle(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                                Icon(Icons.chevron_right_rounded, color: color),
+                              ],
+                            ),
+                          ),
+                        );
+                      }),
+                    ],
+                  ),
+                  loading: () =>
+                      const Center(child: CircularProgressIndicator()),
+                  error: (e, _) => Center(child: Text('Error: $e')),
+                ),
                 const _RadicalsTab(),
               ],
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _GrammarIcon extends StatelessWidget {
+  const _GrammarIcon();
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: AppTheme.primary.withValues(alpha: 0.1),
+        shape: BoxShape.circle,
+      ),
+      child: const SizedBox(
+        width: 56,
+        height: 56,
+        child: Icon(Icons.school_rounded, color: AppTheme.primary),
+      ),
+    );
+  }
+}
+
+class _VocabularyIcon extends StatelessWidget {
+  const _VocabularyIcon();
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: AppTheme.secondary.withValues(alpha: 0.1),
+        shape: BoxShape.circle,
+      ),
+      child: const SizedBox(
+        width: 56,
+        height: 56,
+        child: Icon(Icons.translate_rounded, color: AppTheme.secondary),
       ),
     );
   }
