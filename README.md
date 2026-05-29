@@ -21,19 +21,19 @@
 
 ### Công cụ cần cài đặt
 
-| Công cụ | Phiên bản tối thiểu | Tải về |
-|---------|---------------------|--------|
-| Flutter SDK | 3.x (Dart SDK ≥ 3.5) | [flutter.dev/get-started/install](https://docs.flutter.dev/get-started/install) |
-| Node.js | 18+ | [nodejs.org](https://nodejs.org/) |
-| MongoDB | 6+ | [mongodb.com/try/download/community](https://www.mongodb.com/try/download/community) |
-| Android Studio / Xcode | Mới nhất | Để chạy trên emulator hoặc thiết bị thật |
-| Git | Bất kỳ | [git-scm.com](https://git-scm.com/) |
+| Công cụ                | Phiên bản tối thiểu  | Tải về                                                                               |
+| ---------------------- | -------------------- | ------------------------------------------------------------------------------------ |
+| Flutter SDK            | 3.x (Dart SDK ≥ 3.5) | [flutter.dev/get-started/install](https://docs.flutter.dev/get-started/install)      |
+| Node.js                | 18+                  | [nodejs.org](https://nodejs.org/)                                                    |
+| MongoDB                | 6+                   | [mongodb.com/try/download/community](https://www.mongodb.com/try/download/community) |
+| Android Studio / Xcode | Mới nhất             | Để chạy trên emulator hoặc thiết bị thật                                             |
+| Git                    | Bất kỳ               | [git-scm.com](https://git-scm.com/)                                                  |
 
 ### Tùy chọn (nếu dùng AI local)
 
-| Công cụ | Ghi chú |
-|---------|---------|
-| Ollama | Chạy LLM local (mặc định model `qwen3:4b`). Tải tại [ollama.com](https://ollama.com/) |
+| Công cụ | Ghi chú                                                                               |
+| ------- | ------------------------------------------------------------------------------------- |
+| Ollama  | Chạy LLM local (mặc định model `qwen3:4b`). Tải tại [ollama.com](https://ollama.com/) |
 
 ---
 
@@ -81,6 +81,7 @@ OLLAMA_TIMEOUT_MS=30000
 ```
 
 > **Lưu ý:** Nếu dùng Ollama, hãy cài đặt và pull model trước:
+>
 > ```bash
 > ollama pull qwen3:4b
 > ```
@@ -122,6 +123,7 @@ static const String _localIp = '192.168.x.x'; // IP LAN của máy tính
 ```
 
 > **Cách tìm IP LAN:**
+>
 > - **Windows:** Mở CMD → gõ `ipconfig` → tìm `IPv4 Address`
 > - **macOS / Linux:** Mở Terminal → gõ `ifconfig` hoặc `ip addr`
 >
@@ -144,6 +146,7 @@ npm start
 ```
 
 Nếu thành công, terminal hiển thị:
+
 ```
 Connected to MongoDB at mongodb://localhost:27017/kj_db
 Server listening at http://0.0.0.0:3000
@@ -221,33 +224,45 @@ KJ-main/
 
 ## Các API Endpoint chính
 
-| Method | Endpoint | Mô tả |
-|--------|----------|--------|
-| `POST` | `/auth/register` | Đăng ký tài khoản |
-| `POST` | `/auth/login` | Đăng nhập |
-| `GET`  | `/user/profile` | Lấy thông tin user |
-| `PUT`  | `/user/profile` | Cập nhật thông tin user |
-| `POST` | `/ai/chat` | Chat với AI |
-| `GET`  | `/health` | Kiểm tra trạng thái server |
+| Method   | Endpoint                | Mô tả                         |
+| -------- | ----------------------- | ----------------------------- |
+| `POST`   | `/auth/register`        | Đăng ký tài khoản             |
+| `POST`   | `/auth/login`           | Đăng nhập                     |
+| `GET`    | `/user/profile`         | Lấy thông tin user            |
+| `PUT`    | `/user/profile`         | Cập nhật thông tin user       |
+| `DELETE` | `/user/profile`         | Xoá tài khoản hiện tại        |
+| `GET`    | `/user/quizResults`     | Lấy danh sách kết quả quiz    |
+| `GET`    | `/user/quizResults/:id` | Lấy chi tiết một kết quả quiz |
+| `POST`   | `/user/quizResults`     | Tạo kết quả quiz mới          |
+| `PUT`    | `/user/quizResults/:id` | Cập nhật kết quả quiz         |
+| `DELETE` | `/user/quizResults/:id` | Xoá kết quả quiz              |
+| `POST`   | `/ai/chat`              | Chat với AI                   |
+| `GET`    | `/health`               | Kiểm tra trạng thái server    |
 
 ---
 
 ## Xử lý lỗi thường gặp
 
 ### ❌ `Failed to connect to MongoDB`
+
 → Kiểm tra MongoDB đã chạy chưa (`mongod` hoặc kiểm tra service).
 
 ### ❌ `Connection refused` trên thiết bị thật
+
 → Kiểm tra:
+
 1. Điện thoại và máy tính cùng mạng WiFi
 2. IP trong `appConfig.dart` đúng với IP LAN của máy chạy backend
 3. Firewall không chặn port `3000`
 
 ### ❌ `flutter doctor` báo thiếu license
+
 → Chạy: `flutter doctor --android-licenses`
 
 ### ❌ AI Chat không phản hồi
+
 → Kiểm tra:
+
 - Nếu dùng **Gemini**: API key hợp lệ trong `.env`
 - Nếu dùng **Ollama**: Ollama đang chạy (`ollama serve`) và đã pull model
 
@@ -255,10 +270,10 @@ KJ-main/
 
 ## Tech Stack
 
-| Thành phần | Công nghệ |
-|------------|-----------|
-| Frontend | Flutter 3.x, Dart, Riverpod, GoRouter, Hive |
-| Backend | Node.js, Express 5, Mongoose |
-| Database | MongoDB |
-| AI | Google Gemini API / Ollama (local LLM) |
-| ML | Google ML Kit (nhận dạng chữ viết tay) |
+| Thành phần | Công nghệ                                   |
+| ---------- | ------------------------------------------- |
+| Frontend   | Flutter 3.x, Dart, Riverpod, GoRouter, Hive |
+| Backend    | Node.js, Express 5, Mongoose                |
+| Database   | MongoDB                                     |
+| AI         | Google Gemini API / Ollama (local LLM)      |
+| ML         | Google ML Kit (nhận dạng chữ viết tay)      |
