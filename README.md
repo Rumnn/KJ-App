@@ -33,7 +33,7 @@
 
 | Công cụ | Ghi chú                                                                               |
 | ------- | ------------------------------------------------------------------------------------- |
-| Ollama  | Chạy LLM local (mặc định model `qwen3:4b`). Tải tại [ollama.com](https://ollama.com/) |
+| Ollama  | Chạy LLM local (khuyến nghị model `llama3.2:3b`). Tải tại [ollama.com](https://ollama.com/) |
 
 ---
 
@@ -75,16 +75,22 @@ GEMINI_API_KEY=<your-gemini-api-key>
 
 # --- Lựa chọn 2: Ollama (offline, chạy local) ---
 AI_PROVIDER=ollama
-OLLAMA_MODEL=qwen3:4b
+OLLAMA_MODEL=llama3.2:3b
 OLLAMA_URL=http://localhost:11434
-OLLAMA_TIMEOUT_MS=30000
+OLLAMA_TIMEOUT_MS=60000
+OLLAMA_NUM_PREDICT=1200
+OLLAMA_TEMPERATURE=0.3
+OLLAMA_KEEP_ALIVE=30m
 ```
 
 > **Lưu ý:** Nếu dùng Ollama, hãy cài đặt và pull model trước:
 >
 > ```bash
-> ollama pull qwen3:4b
+> ollama pull llama3.2:3b
 > ```
+>
+> Sau khi đổi `.env`, cần **restart backend** để Node.js đọc lại cấu hình mới.
+> Model `qwen3:4b` không còn được khuyến nghị cho chat trong app vì thường trả kèm phần suy luận nội bộ.
 
 ### 3. Khởi động MongoDB
 
@@ -264,7 +270,41 @@ KJ-main/
 → Kiểm tra:
 
 - Nếu dùng **Gemini**: API key hợp lệ trong `.env`
-- Nếu dùng **Ollama**: Ollama đang chạy (`ollama serve`) và đã pull model
+- Nếu dùng **Ollama**:
+  - Ollama đang chạy và truy cập được tại `OLLAMA_URL` (mặc định `http://localhost:11434`)
+  - Đã pull model trong `.env`: `ollama pull llama3.2:3b`
+  - Backend đã được restart sau khi đổi `.env`
+  - Kiểm tra model bằng: `ollama list`
+
+### ❌ Chat hiện "chế độ ôn tập offline"
+
+→ Đây là fallback an toàn của backend. App sẽ dùng dữ liệu local khi Gemini/Ollama chưa sẵn sàng, hết quota, timeout, hoặc model trả lời không hợp lệ.
+
+Với Ollama, kiểm tra:
+
+```bash
+ollama list
+ollama ps
+```
+
+Nếu đang dùng model reasoning như `qwen3:4b`, nên đổi sang:
+
+```env
+OLLAMA_MODEL=llama3.2:3b
+OLLAMA_TIMEOUT_MS=60000
+OLLAMA_NUM_PREDICT=1200
+OLLAMA_TEMPERATURE=0.3
+OLLAMA_KEEP_ALIVE=30m
+```
+
+Sau đó restart backend:
+
+```bash
+cd backend
+npm run dev
+```
+
+Backend có bộ lọc để không hiển thị phần suy luận nội bộ của model. Nếu model chỉ trả về reasoning hoặc hết token trước khi có đáp án, backend sẽ chuyển sang fallback offline thay vì hiển thị nội dung lỗi lên giao diện.
 
 ---
 

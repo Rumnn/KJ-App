@@ -86,6 +86,7 @@ function loadStudyData() {
 
   const assetsDir = resolveAssetsDir();
   const vocabPath = path.join(assetsDir, 'jlpt_vocab.csv');
+  const kanjiPath = path.join(assetsDir, 'kanjiData.json');
   const grammarDir = path.join(assetsDir, 'grammar');
 
   const vocab = fs.readFileSync(vocabPath, 'utf8')
@@ -105,13 +106,20 @@ function loadStudyData() {
       return items.map(item => ({ ...item, level }));
     });
 
-  studyDataCache = { vocab, grammar };
+  const kanjiJson = JSON.parse(fs.readFileSync(kanjiPath, 'utf8'));
+  const kanji = Object.values(kanjiJson).flat();
+
+  studyDataCache = { vocab, grammar, kanji };
   return studyDataCache;
 }
 
 function getJapaneseTerms(text) {
   return [...new Set(text.match(/[\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Han}ー々]+/gu) || [])]
     .filter(term => term.length > 1);
+}
+
+function getKanjiCharacters(text) {
+  return [...new Set(text.match(/\p{Script=Han}/gu) || [])];
 }
 
 function knownKeigoEntry(term) {
@@ -157,16 +165,24 @@ function knownKeigoEntry(term) {
 }
 
 function buildStudyFallbackReply(message) {
-  const { vocab, grammar } = loadStudyData();
+  const { vocab, grammar, kanji } = loadStudyData();
   const normalized = message.trim().toLowerCase();
   const terms = getJapaneseTerms(message);
+  const kanjiMatches = getKanjiCharacters(message)
+    .map(character => kanji.find(item => item.character === character))
+    .filter(Boolean)
+    .slice(0, 3);
   const knownMatches = terms.map(knownKeigoEntry).filter(Boolean);
 
   const vocabMatches = vocab
     .filter(item => (
-      terms.some(term => item.original.includes(term) || term.includes(item.original) || item.furigana.includes(term))
-      || normalized.includes(item.original.toLowerCase())
-      || normalized.includes(item.furigana.toLowerCase())
+      terms.some(term => (
+        item.original.includes(term)
+        || (item.original.length > 1 && term.includes(item.original))
+        || item.furigana.includes(term)
+      ))
+      || (item.original.length > 1 && normalized.includes(item.original.toLowerCase()))
+      || (item.furigana.length > 1 && normalized.includes(item.furigana.toLowerCase()))
     ))
     .slice(0, 8);
 
@@ -183,6 +199,22 @@ function buildStudyFallbackReply(message) {
 
   if (/^(hi|hello|chào|xin chào|こんにちは|こんばんは)/i.test(normalized)) {
     return 'Xin chào! Sensei đang ở chế độ ôn tập offline. Bạn có thể hỏi về từ vựng, Kanji, mẫu ngữ pháp, hoặc gửi vài từ để mình lập bảng so sánh nhé.';
+  }
+
+  if (kanjiMatches.length > 0 && (normalized.includes('kanji') || mergedVocab.length === 0)) {
+    const blocks = kanjiMatches.map(item => {
+      const meanings = (item.meanings || []).slice(0, 4).join(', ');
+      const onReadings = (item.onReadings || []).join('、') || 'chưa rõ';
+      const kunReadings = (item.kunReadings || []).join('、') || 'chưa rõ';
+      const examples = (item.vocab || [])
+        .slice(0, 3)
+        .map(vocabItem => `- **${vocabItem.kanji}** (${vocabItem.reading}): ${(vocabItem.meanings || []).slice(0, 2).join(', ')}`)
+        .join('\n');
+
+      return `**${item.character}** (${item.jlpt})\n\n- **Nghĩa chính:** ${meanings}\n- **Âm On:** ${onReadings}\n- **Âm Kun:** ${kunReadings}\n- **Số nét:** ${item.strokeCount || 'chưa rõ'}\n\n**Ví dụ trong từ vựng:**\n${examples || '- Chưa có ví dụ trong dữ liệu.'}`;
+    }).join('\n\n---\n\n');
+
+    return `Mình đang dùng dữ liệu Kanji offline vì Ollama chưa trả lời ổn định.\n\n${blocks}`;
   }
 
   if (mergedVocab.length > 1) {
@@ -218,22 +250,51 @@ function isQuotaError(message) {
   return message.includes('429') || message.includes('quota') || message.includes('RESOURCE_EXHAUSTED');
 }
 
-function cleanOllamaReply(reply) {
-  if (!reply) return null;
+const NO_REASONING_INSTRUCTION = [
+  'Chỉ trả lời nội dung cuối cùng bằng tiếng Việt.',
+  'Không hiển thị suy luận nội bộ, phân tích yêu cầu, nháp, hoặc các bước tự kiểm tra.',
+  'Không dùng các tiền tố như "The query is", "I need to", "Wait", "First", "<think>", hoặc "/no_think".',
+].join(' ');
 
-  const withoutThinkingTags = reply.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+function sanitizeAiReply(reply) {
+  if (typeof reply !== 'string') return null;
+
+  let cleaned = reply
+    .replace(/<think>[\s\S]*?<\/think>/gi, '')
+    .replace(/^\/no_think\s*/i, '')
+    .trim();
+
+  if (!cleaned) return null;
+
   const markers = ['Trả lời:', 'Tra loi:', 'Đáp án:', 'Dap an:', 'Answer:'];
-  const marker = markers.find(item => withoutThinkingTags.includes(item));
+  const markerMatch = markers
+    .map(marker => ({ marker, index: cleaned.toLowerCase().lastIndexOf(marker.toLowerCase()) }))
+    .filter(item => item.index >= 0)
+    .sort((a, b) => b.index - a.index)[0];
 
-  if (marker) {
-    return withoutThinkingTags.slice(withoutThinkingTags.indexOf(marker) + marker.length).trim();
+  if (markerMatch) {
+    cleaned = cleaned.slice(markerMatch.index + markerMatch.marker.length).trim();
   }
 
-  if (/^(okay|let me|i need to|wait,|first,)/i.test(withoutThinkingTags)) {
+  cleaned = cleaned
+    .replace(/^["'“”‘’\s.:,-]+/, '')
+    .replace(/^(final answer|answer)\s*:\s*/i, '')
+    .trim();
+
+  if (!cleaned) return null;
+
+  const reasoningStartPattern = /^(okay|let me|i need to|i should|we need to|wait\b|first\b|so they\b|but\b|however\b|the query is|the user (said|wrote|asked|wants)|this translates to|i['’]m supposed to|in this context|actual query)/i;
+  if (reasoningStartPattern.test(cleaned)) {
     return null;
   }
 
-  return withoutThinkingTags;
+  const leakedReasoningPattern = /\b(the user (said|wrote|asked|wants)|i need to|i should|let me re-read|the query is|this translates to|\/no_think)\b/i;
+  const hasVietnameseSignal = /[àáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđ]/i.test(cleaned);
+  if (leakedReasoningPattern.test(cleaned) && !hasVietnameseSignal) {
+    return null;
+  }
+
+  return cleaned;
 }
 
 async function buildOllamaReply(message, history) {
@@ -254,19 +315,20 @@ async function buildOllamaReply(message, history) {
         model,
         stream: false,
         think: false,
+        keep_alive: process.env.OLLAMA_KEEP_ALIVE || '30m',
         options: {
           temperature: Number(process.env.OLLAMA_TEMPERATURE || 0.4),
           num_predict: Number(process.env.OLLAMA_NUM_PREDICT || 800),
         },
         messages: [
-          { role: 'system', content: SENSEI_SYSTEM_PROMPT },
+          { role: 'system', content: `${SENSEI_SYSTEM_PROMPT}\n\n${NO_REASONING_INSTRUCTION}` },
           ...(history || []).map(msg => ({
             role: msg.role === 'user' ? 'user' : 'assistant',
             content: msg.content,
           })),
           {
             role: 'user',
-            content: `/no_think\nChỉ trả lời đáp án cuối cùng bằng tiếng Việt. Bắt đầu bằng "Trả lời:".\n\n${message.trim()}`,
+            content: message.trim(),
           },
         ],
       }),
@@ -277,7 +339,11 @@ async function buildOllamaReply(message, history) {
     }
 
     const data = await response.json();
-    return cleanOllamaReply(data?.message?.content);
+    const reply = sanitizeAiReply(data?.message?.content);
+    if (!reply) {
+      console.warn('Ollama returned an unusable reply and offline fallback will be used.');
+    }
+    return reply;
   } catch (error) {
     console.warn('Ollama fallback failed:', error?.message || error);
     return null;
@@ -329,7 +395,7 @@ router.post('/chat', requireAuth, async (req, res) => {
 
         const chat = model.startChat({ history: chatHistory });
         const result = await chat.sendMessage(message.trim());
-        reply = result.response.text();
+        reply = sanitizeAiReply(result.response.text());
         break; // success
       } catch (err) {
         lastError = err;
@@ -340,7 +406,9 @@ router.post('/chat', requireAuth, async (req, res) => {
       }
     }
 
-    if (!reply) throw lastError;
+    if (!reply) {
+      return res.status(200).json({ reply: await buildLocalOrOfflineReply(message, history) });
+    }
     res.status(200).json({ reply });
   } catch (error) {
     console.error('AI Chat error:', error?.message || error);
@@ -348,10 +416,10 @@ router.post('/chat', requireAuth, async (req, res) => {
     const msg = error?.message || '';
     const fallbackReply = () => buildLocalOrOfflineReply(req.body?.message || '', req.body?.history || []);
     if (msg.includes('API_KEY') || msg.includes('API key')) {
-      return res.status(200).json({ reply: fallbackReply() });
+      return res.status(200).json({ reply: await fallbackReply() });
     }
     if (isQuotaError(msg)) {
-      return res.status(200).json({ reply: fallbackReply() });
+      return res.status(200).json({ reply: await fallbackReply() });
     }
     if (msg.includes('SAFETY')) {
       return res.status(500).json({ message: '⚠️ Nội dung không phù hợp, vui lòng thử câu hỏi khác.' });
