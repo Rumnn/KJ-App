@@ -16,6 +16,19 @@ const userSchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
+  role: {
+    type: String,
+    enum: ['user', 'admin'],
+    default: 'user',
+  },
+  status: {
+    type: String,
+    enum: ['active', 'blocked'],
+    default: 'active',
+  },
+  lastLoginAt: {
+    type: Date,
+  },
   xp: {
     type: Number,
     default: 0,

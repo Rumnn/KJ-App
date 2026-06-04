@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/material.dart';
+import 'package:kj/l10n/app_localizations.dart';
 import '../../providers/dashboardProvider.dart';
 import '../../widgets/streakChart.dart';
 import '../../appTheme.dart';
@@ -7,9 +8,10 @@ class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final data = ref.watch(dashboardProvider);
     return Scaffold(
-      appBar: AppBar(title: const Text('Dashboard')),
+      appBar: AppBar(title: Text(l10n.dashboard)),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Column(
@@ -17,17 +19,17 @@ class DashboardScreen extends ConsumerWidget {
           children: [
             Row(
               children: [
-                Expanded(child: _StreakCard(title: 'Current Streak', value: data.currentStreak.toString(), icon: Icons.local_fire_department_rounded, color: AppTheme.accent)),
+                Expanded(child: _StreakCard(title: l10n.currentStreak, value: data.currentStreak.toString(), icon: Icons.local_fire_department_rounded, color: AppTheme.accent)),
                 const SizedBox(width: 16),
-                Expanded(child: _StreakCard(title: 'Longest Streak', value: data.longestStreak.toString(), icon: Icons.emoji_events_rounded, color: AppTheme.gold)),
+                Expanded(child: _StreakCard(title: l10n.longestStreak, value: data.longestStreak.toString(), icon: Icons.emoji_events_rounded, color: AppTheme.gold)),
               ],
             ),
             const SizedBox(height: 24),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text('Quiz Performance', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: AppTheme.textPrimary)),
-                Text('${data.quizResults.length} Total Quizzes', style: const TextStyle(fontSize: 12, color: AppTheme.textMuted)),
+                Text(l10n.quizPerformance, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: AppTheme.textPrimary)),
+                Text(l10n.totalQuizzes(data.quizResults.length), style: const TextStyle(fontSize: 12, color: AppTheme.textMuted)),
               ],
             ),
             const SizedBox(height: 16),
@@ -38,10 +40,10 @@ class DashboardScreen extends ConsumerWidget {
               child: StreakChart(results: data.quizResults),
             ),
             const SizedBox(height: 32),
-            const Text('Recent Study Days', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: AppTheme.textPrimary)),
+            Text(l10n.recentStudyDays, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: AppTheme.textPrimary)),
             const SizedBox(height: 16),
             if (data.studyDates.isEmpty)
-              const Center(child: Text('No Study Days Yet! Start Studying!', style: TextStyle(color: AppTheme.textMuted)))
+              Center(child: Text(l10n.noStudyDays, style: const TextStyle(color: AppTheme.textMuted)))
             else
               Wrap(
                 spacing: 8,
@@ -68,7 +70,9 @@ class _StreakCard extends StatelessWidget {
   final Color color;
   const _StreakCard({required this.title, required this.value, required this.icon, required this.color});
   @override
-  Widget build(BuildContext context) => Container(
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return Container(
     padding: const EdgeInsets.all(20),
     decoration: BoxDecoration(
       gradient: LinearGradient(colors: [color.withValues(alpha: 0.15), Colors.transparent], begin: Alignment.topLeft, end: Alignment.bottomRight),
@@ -82,7 +86,7 @@ class _StreakCard extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Icon(icon, color: color, size: 28),
-            Container(decoration: BoxDecoration(color: color.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(8)), padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2), child: Text('Days', style: TextStyle(color: color, fontSize: 10, fontWeight: FontWeight.w700))),
+            Container(decoration: BoxDecoration(color: color.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(8)), padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2), child: Text(l10n.days, style: TextStyle(color: color, fontSize: 10, fontWeight: FontWeight.w700))),
           ],
         ),
         const SizedBox(height: 12),
@@ -92,4 +96,5 @@ class _StreakCard extends StatelessWidget {
       ],
     ),
   );
+  }
 }

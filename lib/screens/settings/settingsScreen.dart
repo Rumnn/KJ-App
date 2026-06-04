@@ -1,9 +1,10 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:url_launcher/url_launcher.dart';
-import 'package:go_router/go_router.dart';
 import 'package:flutter/material.dart';
+import 'package:kj/l10n/app_localizations.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../providers/authProvider.dart';
-import '../../services/hiveService.dart';
+import '../../providers/localeProvider.dart';
 import '../../appConfig.dart';
 import '../../appTheme.dart';
 
@@ -23,18 +24,20 @@ class SettingsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(authProvider).value;
+    final l10n = AppLocalizations.of(context)!;
+    final locale = ref.watch(localeProvider).value ?? const Locale('en');
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Profile Settings'),
+        title: Text(l10n.profileSettings),
         leading: IconButton(
-          onPressed: () => context.pop(), 
-          icon: const Icon(Icons.arrow_back, color: AppTheme.primary)
+          onPressed: () => context.pop(),
+          icon: const Icon(Icons.arrow_back, color: AppTheme.primary),
         ),
       ),
       body: ListView(
         padding: const EdgeInsets.all(24),
         children: [
-          // Profile Header Card
           Container(
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
@@ -58,7 +61,7 @@ class SettingsScreen extends ConsumerWidget {
                     shape: BoxShape.circle,
                   ),
                   child: const Center(
-                    child: Icon(Icons.person, size: 32, color: AppTheme.primary)
+                    child: Icon(Icons.person, size: 32, color: AppTheme.primary),
                   ),
                 ),
                 const SizedBox(width: 16),
@@ -67,13 +70,17 @@ class SettingsScreen extends ConsumerWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        user?.email ?? 'Not Logged In', 
-                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)
+                        user?.email ?? l10n.notLoggedIn,
+                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        'JLPT Learner', 
-                        style: TextStyle(fontSize: 14, color: AppTheme.secondary.withValues(alpha: 0.8), fontWeight: FontWeight.w600)
+                        user?.isAdmin == true ? l10n.admin : l10n.jlptLearner,
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: AppTheme.secondary.withValues(alpha: 0.8),
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ],
                   ),
@@ -82,59 +89,100 @@ class SettingsScreen extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: 32),
-          
-          const _SectionHeader(title: 'Account Settings'),
+          _SectionHeader(title: l10n.accountSettings),
           const SizedBox(height: 12),
+          if (user?.isAdmin == true)
+            _SettingsTile(
+              icon: Icons.admin_panel_settings_outlined,
+              title: l10n.adminPanel,
+              subtitle: '${l10n.adminUsers} • ${l10n.adminQuizResults}',
+              color: AppTheme.primary,
+              onTap: () => context.push('/home/admin'),
+            ),
+          _LanguageTile(
+            currentCode: locale.languageCode,
+            onChanged: (code) =>
+                ref.read(localeProvider.notifier).setLocale(Locale(code)),
+          ),
           _SettingsTile(
             icon: Icons.logout_rounded,
-            title: 'Sign Out',
-            subtitle: 'Safely exit your account',
+            title: l10n.signOut,
+            subtitle: l10n.signOutSubtitle,
             color: AppTheme.error,
             onTap: () => _logout(context, ref),
           ),
-          
           const SizedBox(height: 32),
-          const _SectionHeader(title: 'Data Management'),
-          const SizedBox(height: 12),
-          _SettingsTile(
-            icon: Icons.delete_outline_rounded,
-            title: 'Clear Local Progress',
-            subtitle: 'Resets streak and local history',
-            onTap: () async {
-              await HiveService.clearAll();
-              if (context.mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Progress data cleared'))
-                );
-              }
-            },
-          ),
-          
-          const SizedBox(height: 32),
-          const _SectionHeader(title: 'Support & Info'),
+          _SectionHeader(title: l10n.supportInfo),
           const SizedBox(height: 12),
           _SettingsTile(
             icon: Icons.info_outline,
-            title: 'App Version',
-            subtitle: 'Currently v${AppConfig.appVersion}',
+            title: l10n.appVersion,
+            subtitle: l10n.currentlyVersion(AppConfig.appVersion),
           ),
           _SettingsTile(
             icon: Icons.favorite_outline,
-            title: 'Donate',
-            subtitle: 'Support the developer',
+            title: l10n.donate,
+            subtitle: l10n.donateSubtitle,
             onTap: _openDonate,
           ),
-          
           const SizedBox(height: 60),
           Center(
             child: Text(
-              'MADE WITH ♥ BY PKA',
+              'MADE WITH PKA',
               style: TextStyle(
-                fontSize: 11, 
-                fontWeight: FontWeight.w800, 
+                fontSize: 11,
+                fontWeight: FontWeight.w800,
                 color: AppTheme.textMuted.withValues(alpha: 0.5),
-                letterSpacing: 1.5
+                letterSpacing: 1.5,
               ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _LanguageTile extends StatelessWidget {
+  final String currentCode;
+  final ValueChanged<String> onChanged;
+
+  const _LanguageTile({required this.currentCode, required this.onChanged});
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppTheme.outlineVariant.withValues(alpha: 0.2)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.language_rounded, color: AppTheme.onBackground),
+              const SizedBox(width: 16),
+              Text(
+                l10n.language,
+                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            child: SegmentedButton<String>(
+              segments: [
+                ButtonSegment(value: 'en', label: Text(l10n.english)),
+                ButtonSegment(value: 'vi', label: Text(l10n.vietnamese)),
+              ],
+              selected: {currentCode == 'vi' ? 'vi' : 'en'},
+              onSelectionChanged: (value) => onChanged(value.first),
             ),
           ),
         ],
@@ -152,11 +200,11 @@ class _SectionHeader extends StatelessWidget {
     return Text(
       title.toUpperCase(),
       style: const TextStyle(
-        fontSize: 12, 
-        fontWeight: FontWeight.w700, 
-        color: AppTheme.textMuted, 
-        letterSpacing: 1.2
-      )
+        fontSize: 12,
+        fontWeight: FontWeight.w700,
+        color: AppTheme.textMuted,
+        letterSpacing: 1.2,
+      ),
     );
   }
 }
@@ -191,15 +239,15 @@ class _SettingsTile extends StatelessWidget {
         contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
         leading: Icon(icon, color: finalColor, size: 24),
         title: Text(
-          title, 
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: finalColor)
+          title,
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: finalColor),
         ),
-        subtitle: subtitle != null 
-          ? Text(subtitle!, style: const TextStyle(fontSize: 13, color: AppTheme.textMuted)) 
-          : null,
-        trailing: onTap != null 
-          ? const Icon(Icons.chevron_right, color: AppTheme.textMuted) 
-          : null,
+        subtitle: subtitle != null
+            ? Text(subtitle!, style: const TextStyle(fontSize: 13, color: AppTheme.textMuted))
+            : null,
+        trailing: onTap != null
+            ? const Icon(Icons.chevron_right, color: AppTheme.textMuted)
+            : null,
       ),
     );
   }

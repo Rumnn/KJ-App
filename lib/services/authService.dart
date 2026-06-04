@@ -25,6 +25,7 @@ class AuthService {
           final prefs = await SharedPreferences.getInstance();
           await prefs.remove('jwt');
           await prefs.remove('userEmail');
+          await prefs.remove('userRole');
         }
         handler.next(error);
       },
@@ -49,6 +50,7 @@ class AuthService {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('jwt');
     await prefs.remove('userEmail');
+    await prefs.remove('userRole');
   }
 
   static Future<UserModel?> loadSavedUser() async {
@@ -59,7 +61,11 @@ class AuthService {
     try {
       return await fetchProfile();
     } catch (_) {
-      return UserModel(email: email, token: token);
+      return UserModel(
+        email: email,
+        token: token,
+        role: prefs.getString('userRole') ?? 'user',
+      );
     }
   }
 
@@ -67,8 +73,10 @@ class AuthService {
     final res = await _dio.get('/user/profile');
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('jwt') ?? '';
-    return UserModel.fromJson(
+    final user = UserModel.fromJson(
         {...res.data as Map<String, dynamic>, 'token': token});
+    await _persistUser(user);
+    return user;
   }
 
   static Future<List<Map<String, dynamic>>> getLeaderboard() async {
@@ -105,6 +113,7 @@ class AuthService {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('jwt', user.token);
     await prefs.setString('userEmail', user.email);
+    await prefs.setString('userRole', user.role);
   }
 
   static String _formatDioError(DioException e) {
