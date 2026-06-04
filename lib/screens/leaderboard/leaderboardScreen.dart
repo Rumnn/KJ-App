@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:kj/l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../services/authService.dart';
@@ -25,10 +26,11 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
   @override
   Widget build(BuildContext context) {
     final currentUser = ref.watch(authProvider).value;
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Global Rankings'),
+        title: Text(l10n.globalRankings),
         leading: IconButton(
           onPressed: () => context.pop(),
           icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),

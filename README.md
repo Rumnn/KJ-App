@@ -1,79 +1,67 @@
-# KJ — Ứng dụng học tiếng Nhật (JLPT)
+# KJ - Ứng dụng học tiếng Nhật JLPT
 
-Ứng dụng di động hỗ trợ học tiếng Nhật theo chuẩn JLPT, được xây dựng bằng **Flutter** (frontend) và **Node.js + Express + MongoDB** (backend).
+Ứng dụng học tiếng Nhật theo chuẩn JLPT, xây dựng bằng **Flutter** cho frontend và **Node.js + Express + MongoDB** cho backend.
 
-## Tính năng chính
+## Tính Năng Chính
 
-- 📖 Tra cứu & học Kanji (bao gồm thứ tự nét viết)
-- 📝 Từ vựng JLPT (N5 → N1)
-- 📗 Ngữ pháp theo cấp độ
-- 🃏 Flashcard ôn tập
-- ✍️ Luyện viết Kanji (nhận dạng chữ viết tay bằng ML Kit)
-- 🧠 Quiz kiểm tra kiến thức
-- 🤖 Chat AI giải đáp thắc mắc (Gemini / Ollama)
-- 🏆 Bảng xếp hạng (Leaderboard)
-- 📊 Dashboard thống kê tiến độ học tập
-- 🔐 Đăng ký / Đăng nhập tài khoản
+- Tra cứu và học Kanji JLPT, bao gồm thứ tự nét viết.
+- Từ vựng JLPT từ N5 đến N1.
+- Ngữ pháp theo cấp độ N5, N4, N3.
+- Flashcard ôn tập Kanji, từ vựng và ngữ pháp.
+- Luyện viết Kanji với nhận dạng chữ viết tay bằng ML Kit.
+- Quiz kiểm tra kiến thức và lưu kết quả học tập.
+- Chat AI giải đáp thắc mắc bằng Gemini hoặc Ollama local.
+- Bảng xếp hạng người học.
+- Dashboard thống kê streak, quiz và tiến độ học tập.
+- Trang Lessons dạng **Horizontal Carousel Block**, thân thiện hơn với mobile.
+- Chuyển đổi ngôn ngữ giao diện **English / Tiếng Việt** trong phần cài đặt.
+- Trang quản trị Admin để xem thống kê hệ thống, quản lý user, role, trạng thái tài khoản và kết quả quiz.
+- Đăng ký, đăng nhập, JWT auth và phân quyền user/admin.
 
----
+## Yêu Cầu Hệ Thống
 
-## Yêu cầu hệ thống
+| Công cụ | Phiên bản tối thiểu | Ghi chú |
+| --- | --- | --- |
+| Flutter SDK | 3.x, Dart SDK >= 3.5 | Frontend |
+| Node.js | 18+ | Backend |
+| MongoDB | 6+ | Database |
+| Android Studio / Xcode | Mới nhất | Chạy emulator hoặc thiết bị thật |
+| Git | Bất kỳ | Clone source |
+| Ollama | Tùy chọn | Chạy AI local |
 
-### Công cụ cần cài đặt
+## Cài Đặt
 
-| Công cụ                | Phiên bản tối thiểu  | Tải về                                                                               |
-| ---------------------- | -------------------- | ------------------------------------------------------------------------------------ |
-| Flutter SDK            | 3.x (Dart SDK ≥ 3.5) | [flutter.dev/get-started/install](https://docs.flutter.dev/get-started/install)      |
-| Node.js                | 18+                  | [nodejs.org](https://nodejs.org/)                                                    |
-| MongoDB                | 6+                   | [mongodb.com/try/download/community](https://www.mongodb.com/try/download/community) |
-| Android Studio / Xcode | Mới nhất             | Để chạy trên emulator hoặc thiết bị thật                                             |
-| Git                    | Bất kỳ               | [git-scm.com](https://git-scm.com/)                                                  |
-
-### Tùy chọn (nếu dùng AI local)
-
-| Công cụ | Ghi chú                                                                               |
-| ------- | ------------------------------------------------------------------------------------- |
-| Ollama  | Chạy LLM local (khuyến nghị model `llama3.2:3b`). Tải tại [ollama.com](https://ollama.com/) |
-
----
-
-## Cài đặt
-
-### 1. Clone dự án
+### 1. Clone Dự Án
 
 ```bash
 git clone https://github.com/<your-username>/KJ-main.git
 cd KJ-main
 ```
 
-### 2. Cài đặt Backend
+### 2. Cài Đặt Backend
 
 ```bash
-# Di chuyển vào thư mục backend
 cd backend
-
-# Cài đặt dependencies
 npm install
 ```
 
-#### Cấu hình biến môi trường
-
-Chỉnh sửa file `backend/.env` theo nhu cầu:
+Tạo hoặc chỉnh sửa `backend/.env`:
 
 ```env
-# MongoDB — đổi URI nếu MongoDB chạy ở địa chỉ khác
+# MongoDB
 MONGO_URI=mongodb://localhost:27017/kj_db
 
-# JWT Secret — nên đổi sang chuỗi bí mật riêng
+# JWT
 JWT_SECRET=KJ
 
-# === Chọn 1 trong 2 AI Provider bên dưới ===
+# Admin seed account
+ADMIN_EMAIL=admin@gmail.com
+ADMIN_PASSWORD=admin123
 
-# --- Lựa chọn 1: Google Gemini (online, miễn phí) ---
-# Lấy API key tại: https://aistudio.google.com/app/apikey
+# Google Gemini
 GEMINI_API_KEY=<your-gemini-api-key>
 
-# --- Lựa chọn 2: Ollama (offline, chạy local) ---
+# Ollama local AI
 AI_PROVIDER=ollama
 OLLAMA_MODEL=llama3.2:3b
 OLLAMA_URL=http://localhost:11434
@@ -83,237 +71,290 @@ OLLAMA_TEMPERATURE=0.3
 OLLAMA_KEEP_ALIVE=30m
 ```
 
-> **Lưu ý:** Nếu dùng Ollama, hãy cài đặt và pull model trước:
->
-> ```bash
-> ollama pull llama3.2:3b
-> ```
->
-> Sau khi đổi `.env`, cần **restart backend** để Node.js đọc lại cấu hình mới.
-> Model `qwen3:4b` không còn được khuyến nghị cho chat trong app vì thường trả kèm phần suy luận nội bộ.
-
-### 3. Khởi động MongoDB
-
-Đảm bảo MongoDB đang chạy trước khi khởi động backend:
+Nếu dùng Ollama, pull model trước:
 
 ```bash
-# Windows (nếu cài MongoDB làm service, nó tự chạy)
-# Hoặc chạy thủ công:
+ollama pull llama3.2:3b
+```
+
+### 3. Khởi Động MongoDB
+
+Đảm bảo MongoDB đang chạy trước khi chạy backend:
+
+```bash
+# Windows, nếu MongoDB không chạy như service
 mongod
 
 # macOS / Linux
 sudo systemctl start mongod
-# hoặc
-brew services start mongodb-community
 ```
 
-### 4. Cài đặt Flutter Frontend
+### 4. Seed Tài Khoản Admin
 
-```bash
-# Quay lại thư mục gốc
-cd ..
-
-# Kiểm tra môi trường Flutter
-flutter doctor
-
-# Cài đặt dependencies
-flutter pub get
-```
-
-#### Cấu hình kết nối Backend
-
-Chỉnh sửa file `lib/appConfig.dart` — thay `_localIp` bằng **địa chỉ IP LAN** của máy đang chạy backend:
-
-```dart
-static const String _localIp = '192.168.x.x'; // IP LAN của máy tính
-```
-
-> **Cách tìm IP LAN:**
->
-> - **Windows:** Mở CMD → gõ `ipconfig` → tìm `IPv4 Address`
-> - **macOS / Linux:** Mở Terminal → gõ `ifconfig` hoặc `ip addr`
->
-> **Lưu ý:** Nếu chạy trên **Web** hoặc **Emulator trên cùng máy**, không cần đổi IP — app tự dùng `localhost`.
-
----
-
-## Chạy ứng dụng
-
-### Bước 1 — Khởi động Backend
+Sau khi MongoDB chạy và `.env` có `ADMIN_EMAIL` / `ADMIN_PASSWORD`, chạy:
 
 ```bash
 cd backend
+npm run seed
+```
 
-# Chế độ development (tự restart khi sửa code)
+Nếu thành công:
+
+```text
+Admin account ready: admin@gmail.com (admin, active)
+```
+
+Tài khoản admin đăng nhập như user bình thường. Trong app, vào **Profile Settings** để mở **Admin Panel**.
+
+### 5. Cài Đặt Flutter Frontend
+
+```bash
+cd ..
+flutter doctor
+flutter pub get
+```
+
+Nếu chạy trên thiết bị thật, chỉnh IP backend trong `lib/appConfig.dart`:
+
+```dart
+static const String _localIp = '192.168.x.x';
+```
+
+Nếu chạy Web hoặc emulator cùng máy, app tự dùng `localhost`.
+
+## Chạy Ứng Dụng
+
+### Backend
+
+```bash
+cd backend
 npm run dev
+```
 
-# Hoặc chạy bình thường
+Hoặc:
+
+```bash
 npm start
 ```
 
-Nếu thành công, terminal hiển thị:
+Backend mặc định chạy tại:
 
+```text
+http://0.0.0.0:3000
 ```
-Connected to MongoDB at mongodb://localhost:27017/kj_db
-Server listening at http://0.0.0.0:3000
-```
 
-### Bước 2 — Chạy Flutter App
+### Flutter
 
-Mở terminal **mới** (giữ backend chạy ở terminal cũ):
+Mở terminal mới tại thư mục gốc:
 
 ```bash
-# Chạy trên Chrome (Web)
+# Web
 flutter run -d chrome
 
-# Chạy trên Android Emulator
+# Android emulator
 flutter run -d emulator-5554
 
-# Chạy trên thiết bị Android thật (kết nối USB)
+# Thiết bị thật
 flutter run
 
-# Chạy trên iOS Simulator (macOS)
-flutter run -d iPhone
-
-# Xem danh sách thiết bị khả dụng
+# Xem danh sách thiết bị
 flutter devices
 ```
 
----
+## Cấu Trúc Dự Án
 
-## Cấu trúc dự án
-
-```
+```text
 KJ-main/
-├── backend/                  # Backend API (Node.js + Express)
+├── backend/
 │   ├── src/
-│   │   ├── server.js         # Entry point
-│   │   ├── routes/           # API routes (auth, user, ai)
-│   │   ├── models/           # Mongoose models
-│   │   └── middleware/       # Middleware (auth, ...)
-│   ├── .env                  # Biến môi trường
+│   │   ├── server.js              # Entry point backend
+│   │   ├── routes/                # auth, user, admin, ai
+│   │   ├── models/                # Mongoose models
+│   │   └── middleware/            # auth/admin middleware
+│   ├── seed.js                    # Tạo/cập nhật tài khoản admin
+│   ├── .env                       # Biến môi trường
 │   └── package.json
 │
-├── lib/                      # Flutter source code
-│   ├── main.dart             # Entry point
-│   ├── app.dart              # MaterialApp / Theme
-│   ├── appConfig.dart        # Cấu hình API URL
-│   ├── router.dart           # Định tuyến (GoRouter)
-│   ├── screens/              # Các màn hình
-│   │   ├── auth/             #   Đăng nhập / Đăng ký
-│   │   ├── home/             #   Trang chủ
-│   │   ├── kanji/            #   Tra cứu Kanji
-│   │   ├── vocab/            #   Từ vựng
-│   │   ├── grammar/          #   Ngữ pháp
-│   │   ├── flashcard/        #   Flashcard
-│   │   ├── quiz/             #   Làm quiz
-│   │   ├── writing/          #   Luyện viết
-│   │   ├── chat/             #   Chat AI
-│   │   ├── dashboard/        #   Thống kê
-│   │   ├── leaderboard/      #   Bảng xếp hạng
-│   │   └── settings/         #   Cài đặt
-│   ├── models/               # Data models
-│   ├── providers/            # Riverpod providers
-│   ├── services/             # API & local services
-│   └── widgets/              # Reusable widgets
+├── lib/
+│   ├── main.dart
+│   ├── app.dart                   # MaterialApp, theme, localization
+│   ├── appConfig.dart             # API URL config
+│   ├── router.dart                # GoRouter routes + admin guard
+│   ├── l10n/                      # Bản dịch EN/VI
+│   ├── screens/
+│   │   ├── admin/                 # Admin Panel
+│   │   ├── auth/                  # Login / Signup
+│   │   ├── home/                  # Home + Lessons carousel
+│   │   ├── kanji/
+│   │   ├── vocab/
+│   │   ├── grammar/
+│   │   ├── flashcard/
+│   │   ├── quiz/
+│   │   ├── writing/
+│   │   ├── chat/
+│   │   ├── dashboard/
+│   │   ├── leaderboard/
+│   │   └── settings/
+│   ├── models/
+│   ├── providers/
+│   ├── services/
+│   └── widgets/
 │
-├── assets/                   # Dữ liệu tĩnh
-│   ├── kanjiData.json        # Dữ liệu Kanji
-│   ├── jlpt_vocab.csv        # Dữ liệu từ vựng
-│   └── grammar/              # Dữ liệu ngữ pháp
+├── assets/
+│   ├── kanjiData.json
+│   ├── jlpt_vocab.csv
+│   └── grammar/
 │
-├── pubspec.yaml              # Flutter dependencies
+├── l10n.yaml
+├── pubspec.yaml
 └── README.md
 ```
 
----
+## API Endpoint Chính
 
-## Các API Endpoint chính
+### Auth
 
-| Method   | Endpoint                | Mô tả                         |
-| -------- | ----------------------- | ----------------------------- |
-| `POST`   | `/auth/register`        | Đăng ký tài khoản             |
-| `POST`   | `/auth/login`           | Đăng nhập                     |
-| `GET`    | `/user/profile`         | Lấy thông tin user            |
-| `PUT`    | `/user/profile`         | Cập nhật thông tin user       |
-| `DELETE` | `/user/profile`         | Xoá tài khoản hiện tại        |
-| `GET`    | `/user/quizResults`     | Lấy danh sách kết quả quiz    |
-| `GET`    | `/user/quizResults/:id` | Lấy chi tiết một kết quả quiz |
-| `POST`   | `/user/quizResults`     | Tạo kết quả quiz mới          |
-| `PUT`    | `/user/quizResults/:id` | Cập nhật kết quả quiz         |
-| `DELETE` | `/user/quizResults/:id` | Xoá kết quả quiz              |
-| `POST`   | `/ai/chat`              | Chat với AI                   |
-| `GET`    | `/health`               | Kiểm tra trạng thái server    |
+| Method | Endpoint | Mô tả |
+| --- | --- | --- |
+| `POST` | `/auth/register` | Đăng ký tài khoản |
+| `POST` | `/auth/login` | Đăng nhập, trả JWT kèm role/status |
 
----
+### User
 
-## Xử lý lỗi thường gặp
+| Method | Endpoint | Mô tả |
+| --- | --- | --- |
+| `GET` | `/user/profile` | Lấy thông tin user hiện tại |
+| `PUT` | `/user/profile` | Cập nhật email/password |
+| `DELETE` | `/user/profile` | Xóa tài khoản hiện tại |
+| `GET` | `/user/leaderboard` | Lấy bảng xếp hạng |
+| `GET` | `/user/quizResults` | Lấy kết quả quiz của user |
+| `GET` | `/user/quizResults/:id` | Lấy chi tiết một kết quả quiz |
+| `POST` | `/user/quizResults` | Tạo kết quả quiz |
+| `PUT` | `/user/quizResults/:id` | Cập nhật kết quả quiz |
+| `DELETE` | `/user/quizResults/:id` | Xóa kết quả quiz |
 
-### ❌ `Failed to connect to MongoDB`
+### Admin
 
-→ Kiểm tra MongoDB đã chạy chưa (`mongod` hoặc kiểm tra service).
+Các endpoint admin yêu cầu JWT của user có `role = admin`.
 
-### ❌ `Connection refused` trên thiết bị thật
+| Method | Endpoint | Mô tả |
+| --- | --- | --- |
+| `GET` | `/admin/summary` | Thống kê tổng quan hệ thống |
+| `GET` | `/admin/users` | Danh sách user, hỗ trợ search/filter/page |
+| `GET` | `/admin/users/:id` | Chi tiết user và quiz gần đây |
+| `PATCH` | `/admin/users/:id` | Cập nhật email, role, status |
+| `DELETE` | `/admin/users/:id` | Xóa user và quiz results liên quan |
+| `GET` | `/admin/quiz-results` | Danh sách kết quả quiz toàn hệ thống |
+| `DELETE` | `/admin/quiz-results/:id` | Xóa quiz result và tính lại điểm user |
 
-→ Kiểm tra:
+### AI Và Health
 
-1. Điện thoại và máy tính cùng mạng WiFi
-2. IP trong `appConfig.dart` đúng với IP LAN của máy chạy backend
-3. Firewall không chặn port `3000`
+| Method | Endpoint | Mô tả |
+| --- | --- | --- |
+| `POST` | `/ai/chat` | Chat với AI |
+| `GET` | `/health` | Kiểm tra trạng thái server |
 
-### ❌ `flutter doctor` báo thiếu license
+## Tính Năng Mới Đã Bổ Sung
 
-→ Chạy: `flutter doctor --android-licenses`
+### Admin Panel
 
-### ❌ AI Chat không phản hồi
+- User model có `role`, `status`, `lastLoginAt`.
+- Admin có thể xem thống kê tổng quan, danh sách user và kết quả quiz.
+- Admin có thể đổi role, khóa/mở khóa user và xóa user.
+- Admin có thể xóa quiz result sai, hệ thống tự tính lại XP/points/quizCount.
+- User bị `blocked` không thể đăng nhập.
 
-→ Kiểm tra:
+### Lessons Mobile Carousel
 
-- Nếu dùng **Gemini**: API key hợp lệ trong `.env`
-- Nếu dùng **Ollama**:
-  - Ollama đang chạy và truy cập được tại `OLLAMA_URL` (mặc định `http://localhost:11434`)
-  - Đã pull model trong `.env`: `ollama pull llama3.2:3b`
-  - Backend đã được restart sau khi đổi `.env`
-  - Kiểm tra model bằng: `ollama list`
+- Lessons được tổ chức thành các block ngang: Kanji, Ngữ pháp, Từ vựng, Bộ thủ.
+- Mỗi block có carousel card vuốt ngang, phù hợp màn hình mobile.
+- Các route học cũ được giữ nguyên.
 
-### ❌ Chat hiện "chế độ ôn tập offline"
+### Đa Ngôn Ngữ EN/VI
 
-→ Đây là fallback an toàn của backend. App sẽ dùng dữ liệu local khi Gemini/Ollama chưa sẵn sàng, hết quota, timeout, hoặc model trả lời không hợp lệ.
+- Dùng Flutter localization với `l10n.yaml` và ARB files.
+- Người dùng đổi ngôn ngữ trong Settings.
+- UI chính, Home, Lessons, Settings, Auth, Dashboard, Leaderboard và Admin được dịch theo ngôn ngữ đã chọn.
+- Nội dung bài học trong assets được giữ nguyên.
 
-Với Ollama, kiểm tra:
+## Kiểm Tra
+
+Các lệnh đã dùng để kiểm tra:
+
+```bash
+flutter pub get
+flutter analyze
+flutter build web
+```
+
+Backend có thể kiểm tra nhanh cú pháp bằng:
+
+```bash
+node --check src/server.js
+node --check src/routes/adminRoutes.js
+node --check seed.js
+```
+
+## Xử Lý Lỗi Thường Gặp
+
+### `Failed to connect to MongoDB`
+
+Kiểm tra MongoDB đã chạy chưa:
+
+```bash
+mongod
+```
+
+Hoặc kiểm tra service MongoDB trên hệ điều hành của bạn.
+
+### `Connection refused` trên thiết bị thật
+
+Kiểm tra:
+
+1. Điện thoại và máy tính cùng mạng Wi-Fi.
+2. IP trong `lib/appConfig.dart` đúng với IP LAN của máy chạy backend.
+3. Firewall không chặn port `3000`.
+
+### Không đăng nhập được admin
+
+Kiểm tra:
+
+1. MongoDB đang chạy.
+2. `.env` có `ADMIN_EMAIL` và `ADMIN_PASSWORD`.
+3. Đã chạy:
+
+```bash
+cd backend
+npm run seed
+```
+
+4. User admin trong database có `role = admin` và `status = active`.
+
+### AI Chat không phản hồi
+
+Nếu dùng Gemini, kiểm tra `GEMINI_API_KEY`.
+
+Nếu dùng Ollama:
 
 ```bash
 ollama list
 ollama ps
+ollama pull llama3.2:3b
 ```
 
-Nếu đang dùng model reasoning như `qwen3:4b`, nên đổi sang:
-
-```env
-OLLAMA_MODEL=llama3.2:3b
-OLLAMA_TIMEOUT_MS=60000
-OLLAMA_NUM_PREDICT=1200
-OLLAMA_TEMPERATURE=0.3
-OLLAMA_KEEP_ALIVE=30m
-```
-
-Sau đó restart backend:
+Sau khi đổi `.env`, restart backend:
 
 ```bash
 cd backend
 npm run dev
 ```
 
-Backend có bộ lọc để không hiển thị phần suy luận nội bộ của model. Nếu model chỉ trả về reasoning hoặc hết token trước khi có đáp án, backend sẽ chuyển sang fallback offline thay vì hiển thị nội dung lỗi lên giao diện.
-
----
-
 ## Tech Stack
 
-| Thành phần | Công nghệ                                   |
-| ---------- | ------------------------------------------- |
-| Frontend   | Flutter 3.x, Dart, Riverpod, GoRouter, Hive |
-| Backend    | Node.js, Express 5, Mongoose                |
-| Database   | MongoDB                                     |
-| AI         | Google Gemini API / Ollama (local LLM)      |
-| ML         | Google ML Kit (nhận dạng chữ viết tay)      |
+| Thành phần | Công nghệ |
+| --- | --- |
+| Frontend | Flutter 3.x, Dart, Riverpod, GoRouter, Hive, Flutter Localizations |
+| Backend | Node.js, Express 5, Mongoose |
+| Database | MongoDB |
+| AI | Google Gemini API / Ollama local |
+| ML | Google ML Kit Digital Ink Recognition |

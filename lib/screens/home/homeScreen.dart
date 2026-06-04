@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter/material.dart';
+import 'package:kj/l10n/app_localizations.dart';
 import '../../providers/authProvider.dart';
 import '../../providers/dashboardProvider.dart';
 import '../../data/grammarData.dart';
@@ -8,7 +9,6 @@ import '../../data/kanjiData.dart';
 import '../../data/vocabJlptData.dart';
 import '../../widgets/circularProgress.dart';
 import '../../widgets/kanjiGridCard.dart';
-import '../../widgets/shimmerLoader.dart';
 import '../../appTheme.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
@@ -26,15 +26,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final authState = ref.watch(authProvider);
     final dashboardData = ref.watch(dashboardProvider);
     final kanjiAsync = ref.watch(kanjiDataProvider);
+    final l10n = AppLocalizations.of(context)!;
 
     final user = authState.value;
-    final userName = user?.email.split('@').first ?? 'User';
+    final userName = user?.email.split('@').first ?? l10n.defaultUser;
     final currentStreak = dashboardData.currentStreak;
     final xp = user?.xp ?? 0;
     final points = user?.points ?? 0;
 
     // Calculate progress based on quiz results
-    final totalQuizzes = dashboardData.quizResults.length;
     final masteredCount = dashboardData.quizResults
         .where((r) => (r.score / r.total) >= 0.8)
         .length;
@@ -54,15 +54,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   dailyGoal,
                   progress),
               loading: () => const Center(child: CircularProgressIndicator()),
-              error: (e, _) => Center(child: Text('Error loading data: $e')),
+              error: (e, _) =>
+                  Center(child: Text(l10n.errorLoadingData(e.toString()))),
             )
           : _navIndex == 1
               ? const _LessonsTab()
               : _navIndex == 2
-                  ? const Center(
+                  ? Center(
                       child: Text(
-                          'Quiz Screen Coming Soon')) // Navigation handled in BottomNavBar
-                  : const Center(child: Text('Profile Screen Coming Soon')),
+                          l10n.quizComingSoon)) // Navigation handled in BottomNavBar
+                  : Center(child: Text(l10n.profileComingSoon)),
       floatingActionButton: _buildChatFab(),
       bottomNavigationBar: _buildBottomNavBar(),
     );
@@ -70,6 +71,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   Widget _buildHomeTab(String userName, int streak, int xp, int points,
       List<dynamic> recommended, int mastered, int goal, double progress) {
+    final l10n = AppLocalizations.of(context)!;
     return SafeArea(
       child: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
@@ -135,16 +137,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Okaeri, $userName',
+                      l10n.okaeriUser(userName),
                       style: const TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w500,
                           color: AppTheme.textMuted),
                     ),
                     const SizedBox(height: 4),
-                    const Text(
-                      'Keep it up!',
-                      style: TextStyle(
+                    Text(
+                      l10n.keepItUp,
+                      style: const TextStyle(
                           fontSize: 32,
                           fontWeight: FontWeight.w600,
                           color: AppTheme.onBackground),
@@ -175,9 +177,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             height: 1),
                       ),
                       const SizedBox(width: 4),
-                      const Text(
-                        'DAYS',
-                        style: TextStyle(
+                      Text(
+                        l10n.streakDaysUpper,
+                        style: const TextStyle(
                             fontSize: 10,
                             fontWeight: FontWeight.w700,
                             color: AppTheme.tertiary),
@@ -206,9 +208,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ),
               child: Column(
                 children: [
-                  const Text(
-                    'DAILY PROGRESS',
-                    style: TextStyle(
+                  Text(
+                    l10n.dailyProgressUpper,
+                    style: const TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
                         color: AppTheme.textMuted,
@@ -218,7 +220,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   CircularProgress(progress: progress > 0 ? progress : 0.01),
                   const SizedBox(height: 16),
                   Text(
-                    '$mastered/$goal Kanji Mastered',
+                    l10n.kanjiMastered(mastered, goal),
                     style: const TextStyle(
                         fontSize: 16, color: AppTheme.textSecondary),
                   ),
@@ -254,26 +256,26 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       border: Border.all(
                           color: Colors.white.withValues(alpha: 0.1)),
                     ),
-                    child: const Text(
-                      'N5 LEVEL • WEEK 2',
-                      style: TextStyle(
+                    child: Text(
+                      l10n.continueLearningBadge,
+                      style: const TextStyle(
                           fontSize: 10,
                           fontWeight: FontWeight.w600,
                           color: Colors.white),
                     ),
                   ),
                   const SizedBox(height: 16),
-                  const Text(
-                    'Essential Verbs',
-                    style: TextStyle(
+                  Text(
+                    l10n.essentialVerbs,
+                    style: const TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.w600,
                         color: Colors.white),
                   ),
                   const SizedBox(height: 8),
-                  const Text(
-                    'Focusing on movement and direction radicals today.',
-                    style: TextStyle(fontSize: 16, color: Colors.white70),
+                  Text(
+                    l10n.continueLearningSubtitle,
+                    style: const TextStyle(fontSize: 16, color: Colors.white70),
                   ),
                   const SizedBox(height: 32),
                   Row(
@@ -288,7 +290,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12)),
                         ),
-                        child: const Text('Continue'),
+                        child: Text(l10n.continueText),
                       ),
                       const Row(
                         children: [
@@ -308,17 +310,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
-                  'Recommended for you',
-                  style: TextStyle(
+                Text(
+                  l10n.recommendedForYou,
+                  style: const TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.w600,
                       color: AppTheme.onBackground),
                 ),
                 TextButton(
                   onPressed: () => setState(() => _navIndex = 1),
-                  child: const Text('View All',
-                      style: TextStyle(
+                  child: Text(l10n.viewAll,
+                      style: const TextStyle(
                           color: AppTheme.primary,
                           fontWeight: FontWeight.w600)),
                 ),
@@ -361,9 +363,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
-                        'Community Rankings',
-                        style: TextStyle(
+                      Text(
+                        l10n.communityRankings,
+                        style: const TextStyle(
                             fontSize: 24,
                             fontWeight: FontWeight.w600,
                             color: AppTheme.onBackground),
@@ -462,6 +464,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   Widget _buildBottomNavBar() {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -488,23 +491,23 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           setState(() => _navIndex = i);
         },
         items: [
-          const BottomNavigationBarItem(
-            icon: Icon(Icons.home_outlined),
-            activeIcon: Icon(Icons.home, color: AppTheme.primary),
-            label: 'Home',
+          BottomNavigationBarItem(
+            icon: const Icon(Icons.home_outlined),
+            activeIcon: const Icon(Icons.home, color: AppTheme.primary),
+            label: l10n.home,
           ),
-          const BottomNavigationBarItem(
-            icon: Icon(Icons.menu_book_outlined),
-            activeIcon: Icon(Icons.menu_book),
-            label: 'Lessons',
+          BottomNavigationBarItem(
+            icon: const Icon(Icons.menu_book_outlined),
+            activeIcon: const Icon(Icons.menu_book),
+            label: l10n.lessons,
           ),
-          const BottomNavigationBarItem(
-            icon: Icon(Icons.quiz_outlined),
-            label: 'Quiz',
+          BottomNavigationBarItem(
+            icon: const Icon(Icons.quiz_outlined),
+            label: l10n.quiz,
           ),
-          const BottomNavigationBarItem(
-            icon: Icon(Icons.person_outline),
-            label: 'Profile',
+          BottomNavigationBarItem(
+            icon: const Icon(Icons.person_outline),
+            label: l10n.profile,
           ),
         ],
       ),
@@ -544,9 +547,11 @@ class _LessonsTab extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final kanjiAsync = ref.watch(kanjiDataProvider);
     final grammarAsync = ref.watch(grammarDataProvider);
     final vocabAsync = ref.watch(vocabJlptDataProvider);
+    final radicals = ref.watch(radicalListProvider);
     final List<(String, Color)> levels = [
       ('N5', AppTheme.jlptColors[0]),
       ('N4', AppTheme.jlptColors[1]),
@@ -555,325 +560,230 @@ class _LessonsTab extends ConsumerWidget {
       ('N1', AppTheme.jlptColors[4]),
     ];
 
-    return DefaultTabController(
-      length: 4,
-      child: Column(
+    final groupedRadicals = <int, List<dynamic>>{};
+    for (final radical in radicals) {
+      groupedRadicals.putIfAbsent(radical.strokes, () => []).add(radical);
+    }
+    final strokeCounts = groupedRadicals.keys.toList()..sort();
+
+    return SafeArea(
+      bottom: false,
+      child: ListView(
+        padding: const EdgeInsets.fromLTRB(0, 18, 0, 112),
         children: [
-          const SafeArea(child: SizedBox(height: 16)),
-          const TabBar(
-            indicatorColor: AppTheme.primary,
-            labelColor: AppTheme.primary,
-            unselectedLabelColor: AppTheme.textMuted,
-            indicatorSize: TabBarIndicatorSize.tab,
-            tabs: [
-              Tab(text: 'JLPT Kanji'),
-              Tab(text: 'Grammar'),
-              Tab(text: 'Vocabulary'),
-              Tab(text: 'Radicals'),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l10n.lessons,
+                  style: const TextStyle(
+                    fontSize: 32,
+                    fontWeight: FontWeight.w900,
+                    color: AppTheme.onBackground,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  l10n.lessonsSubtitle,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: AppTheme.textMuted,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 18),
+          kanjiAsync.when(
+            data: (data) => _LessonCarouselBlock(
+              title: l10n.jlptKanji,
+              subtitle: l10n.kanjiSubtitle,
+              icon: Icons.school_outlined,
+              color: AppTheme.primary,
+              children: [
+                for (final (level, color) in levels)
+                  _LessonCarouselCard(
+                    badge: level,
+                    title: l10n.levelStudy(level),
+                    subtitle: l10n.essentialKanji(data[level]?.length ?? 0),
+                    color: color,
+                    onTap: () => context.push('/home/kanji/$level'),
+                  ),
+              ],
+            ),
+            loading: () => const _CarouselLoadingBlock(),
+            error: (e, _) => _CarouselErrorBlock(message: 'Error: $e'),
+          ),
+          grammarAsync.when(
+            data: (data) => _LessonCarouselBlock(
+              title: l10n.grammar,
+              subtitle: l10n.grammarSubtitle,
+              icon: Icons.article_outlined,
+              color: AppTheme.primary,
+              onViewAll: () => context.push('/home/grammar'),
+              children: [
+                _LessonActionCard(
+                  icon: Icons.quiz_outlined,
+                  title: l10n.grammarPractice,
+                  subtitle: l10n.grammarPracticeSubtitle,
+                  color: AppTheme.primary,
+                  onTap: () => context.push('/home/grammar'),
+                ),
+                for (final (level, color) in [
+                  ('N5', AppTheme.jlptColors[0]),
+                  ('N4', AppTheme.jlptColors[1]),
+                  ('N3', AppTheme.jlptColors[2]),
+                ])
+                  _LessonCarouselCard(
+                    badge: level,
+                    title: level,
+                    subtitle: l10n.grammarPoints(data[level]?.length ?? 0),
+                    color: color,
+                    onTap: () => context.push('/home/grammar/$level'),
+                  ),
+              ],
+            ),
+            loading: () => const _CarouselLoadingBlock(),
+            error: (e, _) => _CarouselErrorBlock(message: 'Error: $e'),
+          ),
+          vocabAsync.when(
+            data: (data) => _LessonCarouselBlock(
+              title: l10n.vocabulary,
+              subtitle: l10n.vocabularySubtitle,
+              icon: Icons.translate_outlined,
+              color: AppTheme.secondary,
+              onViewAll: () => context.push('/home/vocab'),
+              children: [
+                _LessonActionCard(
+                  icon: Icons.extension_outlined,
+                  title: l10n.vocabularyPractice,
+                  subtitle: l10n.vocabularyPracticeSubtitle,
+                  color: AppTheme.secondary,
+                  onTap: () => context.push('/home/vocab'),
+                ),
+                for (final (level, color) in levels)
+                  _LessonCarouselCard(
+                    badge: level,
+                    title: level,
+                    subtitle: l10n.vocabularyWords(data[level]?.length ?? 0),
+                    color: color,
+                    onTap: () => context.push('/home/vocab/$level'),
+                  ),
+              ],
+            ),
+            loading: () => const _CarouselLoadingBlock(),
+            error: (e, _) => _CarouselErrorBlock(message: 'Error: $e'),
+          ),
+          _LessonCarouselBlock(
+            title: l10n.radicals,
+            subtitle: l10n.radicalsSubtitle,
+            icon: Icons.category_outlined,
+            color: AppTheme.accent,
+            children: [
+              for (final strokes in strokeCounts.take(12))
+                _RadicalCarouselCard(
+                  title: strokes == 1
+                      ? l10n.strokeCount(strokes)
+                      : l10n.strokeCountPlural(strokes),
+                  radicals: groupedRadicals[strokes]!,
+                  color: AppTheme.jlptColors[(strokes - 1) % AppTheme.jlptColors.length],
+                  onTap: () => context.push('/home/radicals'),
+                ),
             ],
           ),
-          Expanded(
-            child: TabBarView(
+        ],
+      ),
+    );
+  }
+}
+
+class _LessonCarouselBlock extends StatelessWidget {
+  final String title;
+  final String subtitle;
+  final IconData icon;
+  final Color color;
+  final VoidCallback? onViewAll;
+  final List<Widget> children;
+
+  const _LessonCarouselBlock({
+    required this.title,
+    required this.subtitle,
+    required this.icon,
+    required this.color,
+    required this.children,
+    this.onViewAll,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 22),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Row(
               children: [
-                kanjiAsync.when(
-                  data: (data) => ListView.builder(
-                    padding: const EdgeInsets.all(24),
-                    itemCount: levels.length,
-                    itemBuilder: (_, i) {
-                      final (level, color) = levels[i];
-                      final count = data[level]?.length ?? 0;
-                      return GestureDetector(
-                        onTap: () => context.push('/home/kanji/$level'),
-                        child: Container(
-                          margin: const EdgeInsets.only(bottom: 16),
-                          padding: const EdgeInsets.all(24),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(24),
-                            border:
-                                Border.all(color: color.withValues(alpha: 0.2)),
-                            boxShadow: [
-                              BoxShadow(
-                                  color: color.withValues(alpha: 0.05),
-                                  blurRadius: 10,
-                                  offset: const Offset(0, 4)),
-                            ],
-                          ),
-                          child: Row(
-                            children: [
-                              Container(
-                                width: 56,
-                                height: 56,
-                                decoration: BoxDecoration(
-                                    color: color.withValues(alpha: 0.1),
-                                    shape: BoxShape.circle),
-                                child: Center(
-                                    child: Text(level,
-                                        style: TextStyle(
-                                            fontSize: 20,
-                                            fontWeight: FontWeight.bold,
-                                            color: color))),
-                              ),
-                              const SizedBox(width: 20),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text('$level Level Study',
-                                        style: const TextStyle(
-                                            fontSize: 18,
-                                            fontWeight: FontWeight.bold)),
-                                    Text('$count Essential Kanji',
-                                        style: const TextStyle(
-                                            fontSize: 14,
-                                            color: AppTheme.textMuted)),
-                                  ],
-                                ),
-                              ),
-                              Icon(Icons.chevron_right_rounded, color: color),
-                            ],
-                          ),
-                        ),
-                      );
-                    },
+                Container(
+                  width: 38,
+                  height: 38,
+                  decoration: BoxDecoration(
+                    color: color.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                  loading: () =>
-                      const Center(child: CircularProgressIndicator()),
-                  error: (e, _) => Center(child: Text('Error: $e')),
+                  child: Icon(icon, color: color, size: 21),
                 ),
-                grammarAsync.when(
-                  data: (data) => ListView(
-                    padding: const EdgeInsets.all(24),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      GestureDetector(
-                        onTap: () => context.push('/home/grammar'),
-                        child: Container(
-                          margin: const EdgeInsets.only(bottom: 16),
-                          padding: const EdgeInsets.all(24),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(24),
-                            border: Border.all(
-                              color: AppTheme.primary.withValues(alpha: 0.18),
-                            ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: AppTheme.primary.withValues(alpha: 0.05),
-                                blurRadius: 10,
-                                offset: const Offset(0, 4),
-                              ),
-                            ],
-                          ),
-                          child: const Row(
-                            children: [
-                              _GrammarIcon(),
-                              SizedBox(width: 20),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      'Grammar Practice',
-                                      style: TextStyle(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                    Text(
-                                      'Quiz and flashcards for N5, N4, N3',
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        color: AppTheme.textMuted,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              Icon(
-                                Icons.chevron_right_rounded,
-                                color: AppTheme.primary,
-                              ),
-                            ],
-                          ),
+                      Text(
+                        title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 19,
+                          fontWeight: FontWeight.w900,
+                          color: AppTheme.onBackground,
                         ),
                       ),
-                      ...[
-                        ('N5', AppTheme.jlptColors[0]),
-                        ('N4', AppTheme.jlptColors[1]),
-                        ('N3', AppTheme.jlptColors[2]),
-                      ].map((item) {
-                        final (level, color) = item;
-                        final count = data[level]?.length ?? 0;
-                        return GestureDetector(
-                          onTap: () => context.push('/home/grammar/$level'),
-                          child: Container(
-                            margin: const EdgeInsets.only(bottom: 12),
-                            padding: const EdgeInsets.all(18),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(18),
-                              border: Border.all(
-                                color: color.withValues(alpha: 0.2),
-                              ),
-                            ),
-                            child: Row(
-                              children: [
-                                Container(
-                                  width: 50,
-                                  height: 50,
-                                  decoration: BoxDecoration(
-                                    color: color.withValues(alpha: 0.1),
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: Center(
-                                    child: Text(
-                                      level,
-                                      style: TextStyle(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.bold,
-                                        color: color,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(width: 16),
-                                Expanded(
-                                  child: Text(
-                                    '$count Grammar Points',
-                                    style: const TextStyle(
-                                      fontSize: 15,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ),
-                                Icon(Icons.chevron_right_rounded, color: color),
-                              ],
-                            ),
-                          ),
-                        );
-                      }),
-                    ],
-                  ),
-                  loading: () =>
-                      const Center(child: CircularProgressIndicator()),
-                  error: (e, _) => Center(child: Text('Error: $e')),
-                ),
-                vocabAsync.when(
-                  data: (data) => ListView(
-                    padding: const EdgeInsets.all(24),
-                    children: [
-                      GestureDetector(
-                        onTap: () => context.push('/home/vocab'),
-                        child: Container(
-                          margin: const EdgeInsets.only(bottom: 16),
-                          padding: const EdgeInsets.all(24),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(24),
-                            border: Border.all(
-                              color: AppTheme.secondary.withValues(alpha: 0.18),
-                            ),
-                            boxShadow: [
-                              BoxShadow(
-                                color:
-                                    AppTheme.secondary.withValues(alpha: 0.05),
-                                blurRadius: 10,
-                                offset: const Offset(0, 4),
-                              ),
-                            ],
-                          ),
-                          child: const Row(
-                            children: [
-                              _VocabularyIcon(),
-                              SizedBox(width: 20),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      'Vocabulary Practice',
-                                      style: TextStyle(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                    Text(
-                                      'Quiz, flashcards, and matching game',
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        color: AppTheme.textMuted,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              Icon(
-                                Icons.chevron_right_rounded,
-                                color: AppTheme.secondary,
-                              ),
-                            ],
-                          ),
+                      const SizedBox(height: 2),
+                      Text(
+                        subtitle,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: AppTheme.textMuted,
                         ),
                       ),
-                      ...levels.map((item) {
-                        final (level, color) = item;
-                        final count = data[level]?.length ?? 0;
-                        return GestureDetector(
-                          onTap: () => context.push('/home/vocab/$level'),
-                          child: Container(
-                            margin: const EdgeInsets.only(bottom: 12),
-                            padding: const EdgeInsets.all(18),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(18),
-                              border: Border.all(
-                                color: color.withValues(alpha: 0.2),
-                              ),
-                            ),
-                            child: Row(
-                              children: [
-                                Container(
-                                  width: 50,
-                                  height: 50,
-                                  decoration: BoxDecoration(
-                                    color: color.withValues(alpha: 0.1),
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: Center(
-                                    child: Text(
-                                      level,
-                                      style: TextStyle(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.bold,
-                                        color: color,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(width: 16),
-                                Expanded(
-                                  child: Text(
-                                    '$count Vocabulary Words',
-                                    style: const TextStyle(
-                                      fontSize: 15,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ),
-                                Icon(Icons.chevron_right_rounded, color: color),
-                              ],
-                            ),
-                          ),
-                        );
-                      }),
                     ],
                   ),
-                  loading: () =>
-                      const Center(child: CircularProgressIndicator()),
-                  error: (e, _) => Center(child: Text('Error: $e')),
                 ),
-                const _RadicalsTab(),
+                if (onViewAll != null)
+                  TextButton(
+                    onPressed: onViewAll,
+                    child: Text(l10n.viewAll),
+                  ),
               ],
+            ),
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            height: 148,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              physics: const BouncingScrollPhysics(),
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              itemCount: children.length,
+              separatorBuilder: (_, __) => const SizedBox(width: 12),
+              itemBuilder: (_, index) => children[index],
             ),
           ),
         ],
@@ -882,111 +792,264 @@ class _LessonsTab extends ConsumerWidget {
   }
 }
 
-class _GrammarIcon extends StatelessWidget {
-  const _GrammarIcon();
+class _LessonCarouselCard extends StatelessWidget {
+  final String badge;
+  final String title;
+  final String subtitle;
+  final Color color;
+  final VoidCallback onTap;
+
+  const _LessonCarouselCard({
+    required this.badge,
+    required this.title,
+    required this.subtitle,
+    required this.color,
+    required this.onTap,
+  });
 
   @override
-  Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: AppTheme.primary.withValues(alpha: 0.1),
-        shape: BoxShape.circle,
-      ),
-      child: const SizedBox(
-        width: 56,
-        height: 56,
-        child: Icon(Icons.school_rounded, color: AppTheme.primary),
-      ),
-    );
-  }
-}
-
-class _VocabularyIcon extends StatelessWidget {
-  const _VocabularyIcon();
-
-  @override
-  Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: AppTheme.secondary.withValues(alpha: 0.1),
-        shape: BoxShape.circle,
-      ),
-      child: const SizedBox(
-        width: 56,
-        height: 56,
-        child: Icon(Icons.translate_rounded, color: AppTheme.secondary),
-      ),
-    );
-  }
-}
-
-class _RadicalsTab extends ConsumerWidget {
-  const _RadicalsTab();
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final radicals = ref.watch(radicalListProvider);
-    final grouped = <int, List<dynamic>>{};
-    for (final r in radicals) {
-      grouped.putIfAbsent(r.strokes, () => []).add(r);
-    }
-    final strokeCounts = grouped.keys.toList()..sort();
-    return ListView.builder(
-      padding: const EdgeInsets.all(20),
-      itemCount: strokeCounts.length,
-      itemBuilder: (_, i) {
-        final strokes = strokeCounts[i];
-        final group = grouped[strokes]!;
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              child: Text('$strokes Stroke${strokes == 1 ? '' : 's'}',
-                  style: const TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                      color: AppTheme.textMuted,
-                      letterSpacing: 1.2)),
-            ),
-            SizedBox(
-              width: double.infinity,
-              child: Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: group
-                    .map((r) => Container(
-                          width: 72,
-                          padding: const EdgeInsets.symmetric(vertical: 10),
-                          decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(
-                                  color: AppTheme.outlineVariant
-                                      .withValues(alpha: 0.3))),
-                          child: Column(
-                            children: [
-                              Text(r.character,
-                                  style: const TextStyle(
-                                      fontSize: 26, color: AppTheme.primary)),
-                              const SizedBox(height: 2),
-                              Text(r.meaning,
-                                  style: const TextStyle(
-                                      fontSize: 8, color: AppTheme.textMuted),
-                                  textAlign: TextAlign.center,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis),
-                            ],
+  Widget build(BuildContext context) => SizedBox(
+        width: 224,
+        child: Material(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(18),
+          child: InkWell(
+            onTap: onTap,
+            borderRadius: BorderRadius.circular(18),
+            child: Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(color: color.withValues(alpha: 0.22)),
+                boxShadow: [
+                  BoxShadow(
+                    color: color.withValues(alpha: 0.05),
+                    blurRadius: 14,
+                    offset: const Offset(0, 6),
+                  ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Container(
+                        width: 52,
+                        height: 52,
+                        decoration: BoxDecoration(
+                          color: color.withValues(alpha: 0.12),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Center(
+                          child: Text(
+                            badge,
+                            style: TextStyle(
+                              fontSize: 19,
+                              fontWeight: FontWeight.w900,
+                              color: color,
+                            ),
                           ),
-                        ))
-                    .toList(),
+                        ),
+                      ),
+                      Icon(Icons.chevron_right_rounded, color: color),
+                    ],
+                  ),
+                  const Spacer(),
+                  Text(
+                    title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w900,
+                      color: AppTheme.onBackground,
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    subtitle,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      color: AppTheme.textMuted,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
               ),
             ),
-            const SizedBox(height: 16),
-          ],
-        );
-      },
-    );
-  }
+          ),
+        ),
+      );
+}
+
+class _LessonActionCard extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final Color color;
+  final VoidCallback onTap;
+
+  const _LessonActionCard({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.color,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) => SizedBox(
+        width: 244,
+        child: Material(
+          color: color.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(18),
+          child: InkWell(
+            onTap: onTap,
+            borderRadius: BorderRadius.circular(18),
+            child: Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(color: color.withValues(alpha: 0.22)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    width: 52,
+                    height: 52,
+                    decoration: BoxDecoration(
+                      color: color.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Icon(icon, color: color),
+                  ),
+                  const Spacer(),
+                  Text(
+                    title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w900,
+                      color: AppTheme.onBackground,
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    subtitle,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: AppTheme.textMuted,
+                      height: 1.25,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+}
+
+class _RadicalCarouselCard extends StatelessWidget {
+  final String title;
+  final List<dynamic> radicals;
+  final Color color;
+  final VoidCallback onTap;
+
+  const _RadicalCarouselCard({
+    required this.title,
+    required this.radicals,
+    required this.color,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) => SizedBox(
+        width: 224,
+        child: Material(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(18),
+          child: InkWell(
+            onTap: onTap,
+            borderRadius: BorderRadius.circular(18),
+            child: Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(color: color.withValues(alpha: 0.22)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: TextStyle(
+                      color: color,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                  const Spacer(),
+                  Wrap(
+                    spacing: 6,
+                    runSpacing: 6,
+                    children: radicals
+                        .take(8)
+                        .map((radical) => Container(
+                              width: 32,
+                              height: 32,
+                              alignment: Alignment.center,
+                              decoration: BoxDecoration(
+                                color: color.withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(9),
+                              ),
+                              child: Text(
+                                radical.character,
+                                style: TextStyle(
+                                  color: color,
+                                  fontWeight: FontWeight.w800,
+                                  fontSize: 18,
+                                ),
+                              ),
+                            ))
+                        .toList(),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+}
+
+class _CarouselLoadingBlock extends StatelessWidget {
+  const _CarouselLoadingBlock();
+
+  @override
+  Widget build(BuildContext context) => const SizedBox(
+        height: 178,
+        child: Center(child: CircularProgressIndicator()),
+      );
+}
+
+class _CarouselErrorBlock extends StatelessWidget {
+  final String message;
+
+  const _CarouselErrorBlock({required this.message});
+
+  @override
+  Widget build(BuildContext context) => Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        child: Text(message, style: const TextStyle(color: AppTheme.error)),
+      );
 }
 
 class _LeaderboardItem extends StatelessWidget {

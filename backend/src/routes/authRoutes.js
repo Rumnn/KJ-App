@@ -6,6 +6,14 @@ import User from '../models/User.js';
 const router = express.Router();
 const JWT_SECRET = process.env.JWT_SECRET || 'KJ'; // Fallback to 'KJ' to match previous Fastify setup
 
+function signUserToken(user) {
+  return jwt.sign(
+    { userId: user._id, email: user.email, role: user.role },
+    JWT_SECRET,
+    { expiresIn: '7d' },
+  );
+}
+
 router.post('/register', async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -27,9 +35,17 @@ router.post('/register', async (req, res) => {
     const newUser = new User({ email, passwordHash });
     await newUser.save();
 
-    const token = jwt.sign({ userId: newUser._id, email: newUser.email }, JWT_SECRET, { expiresIn: '7d' });
+    const token = signUserToken(newUser);
     
-    res.status(201).json({ token, email: newUser.email });
+    res.status(201).json({
+      token,
+      email: newUser.email,
+      role: newUser.role,
+      status: newUser.status,
+      xp: newUser.xp,
+      points: newUser.points,
+      quizCount: newUser.quizCount,
+    });
   } catch (error) {
     console.error('Registration error:', error);
     res.status(500).json({ message: 'Internal Server Error' });
@@ -49,14 +65,29 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({ message: 'Invalid Credentials!' });
     }
 
+    if (user.status === 'blocked') {
+      return res.status(403).json({ message: 'This account has been blocked' });
+    }
+
     const match = await bcrypt.compare(password, user.passwordHash);
     if (!match) {
       return res.status(401).json({ message: 'Invalid Credentials!' });
     }
 
-    const token = jwt.sign({ userId: user._id, email: user.email }, JWT_SECRET, { expiresIn: '7d' });
+    user.lastLoginAt = new Date();
+    await user.save();
+
+    const token = signUserToken(user);
     
-    res.status(200).json({ token, email: user.email });
+    res.status(200).json({
+      token,
+      email: user.email,
+      role: user.role,
+      status: user.status,
+      xp: user.xp,
+      points: user.points,
+      quizCount: user.quizCount,
+    });
   } catch (error) {
     console.error('Login error:', error);
     res.status(500).json({ message: 'Internal Server Error' });

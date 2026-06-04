@@ -13,6 +13,7 @@ import 'screens/kanji/kanjiDetailScreen.dart';
 import 'screens/kanji/kanjiListScreen.dart';
 import 'screens/auth/signUpScreen.dart';
 import 'screens/auth/loginScreen.dart';
+import 'screens/admin/adminScreen.dart';
 import 'screens/home/homeScreen.dart';
 import 'screens/quiz/quizScreen.dart';
 import 'screens/leaderboard/leaderboardScreen.dart';
@@ -25,12 +26,15 @@ final routerProvider = Provider<GoRouter>((ref) {
     redirect: (context, state) async {
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('jwt');
+      final role = prefs.getString('userRole') ?? 'user';
       final seenOnboarding = prefs.getBool('seenOnboarding') ?? false;
       final onOnboarding = state.matchedLocation == '/onboarding';
       final onAuth = state.matchedLocation.startsWith('/auth');
+      final onAdmin = state.matchedLocation == '/home/admin';
       if (!seenOnboarding) return '/onboarding';
       if (token == null && !onAuth) return '/auth/login';
       if (token != null && (onOnboarding || onAuth)) return '/home';
+      if (onAdmin && role != 'admin') return '/home';
       return null;
     },
     routes: [
@@ -143,6 +147,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
               path: 'dashboard', builder: (_, __) => const DashboardScreen()),
           GoRoute(path: 'settings', builder: (_, __) => const SettingsScreen()),
+          GoRoute(path: 'admin', builder: (_, __) => const AdminScreen()),
           GoRoute(
               path: 'leaderboard',
               builder: (_, __) => const LeaderboardScreen()),
